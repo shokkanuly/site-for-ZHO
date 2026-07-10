@@ -60,17 +60,38 @@ async def seed_data():
                 User(id=777777, username="jasylel_admin", first_name="Jasyl El Lead", role="project_admin", project_id=3, points=0),
                 User(id=666666, username="taza_admin", first_name="Tazart Lead", role="project_admin", project_id=4, points=0),
                 User(id=555555, username="zan_admin", first_name="Zan Lead", role="project_admin", project_id=5, points=0),
+                
+                # Project 1: Zhastar Ortalygy
+                User(id=111112, username="zhastar_volunteer", first_name="Алихан", role="volunteer", project_id=1, points=30),
+                User(id=444442, username="zhastar_coordinator", first_name="Zhastar Worker", role="coordinator", project_id=1, points=0),
+                
+                # Project 2: Shanyraq
+                User(id=111113, username="shanyraq_volunteer", first_name="Мария", role="volunteer", project_id=2, points=25),
+                User(id=333333, username="shanyraq_coordinator", first_name="Shanyraq Worker", role="coordinator", project_id=2, points=0),
+                
+                # Project 3: Jasyl El
                 User(id=111111, username="aibek_volunteer", first_name="Айбек", role="volunteer", project_id=3, points=45),
                 User(id=444444, username="jasylel_coordinator", first_name="Jasyl El Worker", role="coordinator", project_id=3, points=0),
-                User(id=333333, username="shanyraq_coordinator", first_name="Shanyraq Worker", role="coordinator", project_id=2, points=0),
+                
+                # Project 4: Taza Qazaqstan
+                User(id=111114, username="taza_volunteer", first_name="Данияр", role="volunteer", project_id=4, points=50),
+                User(id=444445, username="taza_coordinator", first_name="Taza Worker", role="coordinator", project_id=4, points=0),
+                
+                # Project 5: Zan men Tartip
+                User(id=111115, username="zan_volunteer", first_name="Елена", role="volunteer", project_id=5, points=15),
+                User(id=444446, username="zan_coordinator", first_name="Zan Worker", role="coordinator", project_id=5, points=0),
             ]
             db.add_all(users)
             await db.commit()
 
             # Seed volunteer profiles
             vps = [
+                VolunteerProfile(user_id=111112, project_id=1, hours_logged=15, status="active", coordinator_id=444442),
+                VolunteerProfile(user_id=111113, project_id=2, hours_logged=10, status="active", coordinator_id=333333),
                 VolunteerProfile(user_id=111111, project_id=3, hours_logged=12, status="active", coordinator_id=444444),
                 VolunteerProfile(user_id=111111, project_id=2, hours_logged=5, status="active"),
+                VolunteerProfile(user_id=111114, project_id=4, hours_logged=20, status="active", coordinator_id=444445),
+                VolunteerProfile(user_id=111115, project_id=5, hours_logged=8, status="active", coordinator_id=444446),
             ]
             db.add_all(vps)
             await db.commit()

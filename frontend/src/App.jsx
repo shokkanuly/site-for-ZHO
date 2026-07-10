@@ -52,8 +52,26 @@ export default function App() {
     { id: 777777, username: "jasylel_admin", first_name: "Jasyl El Lead", role: "project_admin", project_id: 3, points: 0 },
     { id: 666666, username: "taza_admin", first_name: "Tazart Lead", role: "project_admin", project_id: 4, points: 0 },
     { id: 555555, username: "zan_admin", first_name: "Zan Lead", role: "project_admin", project_id: 5, points: 0 },
-    { id: 444444, username: "jasylel_coordinator", first_name: "Jasyl El Worker", role: "coordinator", project_id: 3, points: 0 },
-    { id: 111111, username: "aibek_volunteer", first_name: "Айбек (Волонтер)", role: "volunteer", project_id: 3, points: 45 }
+    
+    // Project 1 (Zhastar Ortalygy) Non-Admins
+    { id: 111112, username: "zhastar_volunteer", first_name: "Алихан (Волонтер Zhastar)", role: "volunteer", project_id: 1, points: 30 },
+    { id: 444442, username: "zhastar_coordinator", first_name: "Координатор Zhastar", role: "coordinator", project_id: 1, points: 0 },
+    
+    // Project 2 (Shanyraq) Non-Admins
+    { id: 111113, username: "shanyraq_volunteer", first_name: "Мария (Волонтер Shanyraq)", role: "volunteer", project_id: 2, points: 25 },
+    { id: 333333, username: "shanyraq_coordinator", first_name: "Координатор Shanyraq", role: "coordinator", project_id: 2, points: 0 },
+    
+    // Project 3 (Jasyl El) Non-Admins
+    { id: 111111, username: "aibek_volunteer", first_name: "Айбек (Волонтер Jasyl)", role: "volunteer", project_id: 3, points: 45 },
+    { id: 444444, username: "jasylel_coordinator", first_name: "Координатор Jasyl El", role: "coordinator", project_id: 3, points: 0 },
+    
+    // Project 4 (Taza Qazaqstan) Non-Admins
+    { id: 111114, username: "taza_volunteer", first_name: "Данияр (Волонтер Taza)", role: "volunteer", project_id: 4, points: 50 },
+    { id: 444445, username: "taza_coordinator", first_name: "Координатор Taza", role: "coordinator", project_id: 4, points: 0 },
+    
+    // Project 5 (Zan men Tartip) Non-Admins
+    { id: 111115, username: "zan_volunteer", first_name: "Елена (Волонтер Zan)", role: "volunteer", project_id: 5, points: 15 },
+    { id: 444446, username: "zan_coordinator", first_name: "Координатор Zan", role: "coordinator", project_id: 5, points: 0 }
   ];
 
   // Core Routing State
