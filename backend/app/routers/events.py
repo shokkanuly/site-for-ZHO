@@ -72,7 +72,7 @@ async def create_event(
         latitude=event_data.latitude,
         longitude=event_data.longitude,
         address=event_data.address,
-        event_date=event_data.event_date,
+        event_date=event_data.event_date.replace(tzinfo=None),
         category=event_data.category,
         points_reward=event_data.points_reward,
         status="active"

@@ -52,7 +52,7 @@ export const translations = {
     
     // Portal Nav
     tabEvents: "Акции",
-    tabPropose: "Подать заявку",
+    tabPropose: "Оставить заявку",
     tabCabinet: "Кабинет",
     logout: "Выйти",
     login: "Войти в систему",
@@ -71,7 +71,7 @@ export const translations = {
     noEventsDesc: "В данной категории сейчас ничего не проводится.",
     
     // Propose
-    propTitle: "Создать заявку",
+    propTitle: "Оставить заявку",
     propDesc: "Предложите экологический субботник, озеленение или социальную акцию.",
     propCat: "Направление акции",
     propName: "Название мероприятия *",
@@ -79,7 +79,7 @@ export const translations = {
     propAddress: "Адрес / место сбора *",
     propMap: "Точка на карте",
     propDate: "Дата и время *",
-    propSubmit: "Опубликовать акцию",
+    propSubmit: "Оставить заявку",
     
     // Cabinet
     cabLoginReq: "Требуется вход",
@@ -229,7 +229,7 @@ export const translations = {
     
     // Portal Nav
     tabEvents: "Акциялар",
-    tabPropose: "Өтінім беру",
+    tabPropose: "Өтінім қалдыру",
     tabCabinet: "Кабинет",
     logout: "Шығу",
     login: "Жүйеге кіру",
@@ -248,7 +248,7 @@ export const translations = {
     noEventsDesc: "Бұл санатта қазір ештеңе өткізілмейді.",
     
     // Propose
-    propTitle: "Өтінім жасау",
+    propTitle: "Өтінім қалдыру",
     propDesc: "Экологиялық сенбілік, көгалдандыру немесе әлеуметтік акцияны ұсыныңыз.",
     propCat: "Акция бағыты",
     propName: "Іс-шара атауы *",
@@ -256,7 +256,7 @@ export const translations = {
     propAddress: "Мекенжай / жиналу орны *",
     propMap: "Картадағы нүкте",
     propDate: "Күні мен уақыты *",
-    propSubmit: "Акцияны жариялау",
+    propSubmit: "Өтінім қалдыру",
     
     // Cabinet
     cabLoginReq: "Кіру қажет",
