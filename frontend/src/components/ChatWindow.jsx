@@ -120,27 +120,27 @@ export default function ChatWindow({ eventId, eventTitle }) {
   }, [messages]);
 
   return (
-    <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+    <div className="coor-chat-window">
       {/* Chat Header Status Bar */}
-      <div className="chat-status" style={{ borderBottom: "1px solid #111", padding: "0.5rem 1rem", backgroundColor: "#F9F9F9" }}>
-        <div style={{ fontWeight: "bold", fontSize: "0.8rem" }}>🗣️ Координационный чат: {eventTitle}</div>
+      <div className="coor-chat-header">
+        <div className="coor-chat-title">🗣️ Координационный чат: {eventTitle}</div>
         <div>
           {connectionStatus === "connected" && (
-            <span className="status-online">● ПОДКЛЮЧЕНО</span>
+            <span className="status-dot-online" style={{ fontSize: "0.75rem", fontWeight: "bold" }}>● ПОДКЛЮЧЕНО</span>
           )}
           {connectionStatus === "connecting" && (
-            <span className="status-connecting">⏱️ ПОДКЛЮЧЕНИЕ...</span>
+            <span className="status-dot-connecting" style={{ fontSize: "0.75rem", fontWeight: "bold" }}>⏱️ ПОДКЛЮЧЕНИЕ...</span>
           )}
           {connectionStatus === "disconnected" && (
-            <span className="status-offline">✕ ВНЕ СЕТИ (ПОВТОР...)</span>
+            <span className="status-dot-offline" style={{ fontSize: "0.75rem", fontWeight: "bold" }}>✕ ВНЕ СЕТИ (ПОВТОР...)</span>
           )}
         </div>
       </div>
 
       {/* Messages Feed */}
-      <div className="chat-messages" style={{ height: "300px", padding: "1rem" }}>
+      <div className="coor-chat-messages">
         {messages.length === 0 ? (
-          <div style={{ textAlign: "center", color: "#888", fontSize: "0.75rem", marginTop: "2rem" }}>
+          <div style={{ textAlign: "center", color: "var(--text-secondary)", fontSize: "0.8rem", marginTop: "2rem" }}>
             Сообщений нет. Напишите что-нибудь, чтобы скоординировать волонтеров!
           </div>
         ) : (
@@ -152,26 +152,17 @@ export default function ChatWindow({ eventId, eventTitle }) {
             return (
               <div 
                 key={msg.id || index} 
-                className={`chat-message-bubble ${isMe ? "me" : ""}`}
-                style={{ 
-                  borderRadius: "10px",
-                  alignSelf: isMe ? "flex-end" : "flex-start",
-                  border: "1px solid var(--border-light)",
-                  boxShadow: "var(--shadow-sm)",
-                  backgroundColor: isMe ? "#E0F2F1" : "#FFFFFF",
-                  padding: "0.5rem 0.85rem",
-                  maxWidth: "80%"
-                }}
+                className={`coor-chat-bubble ${isMe ? "mine" : "theirs"}`}
               >
-                <div className="message-sender">
-                  <span style={{ color: msg.user?.role === "organizer" ? "var(--color-jasylel)" : "#555", fontWeight: "bold" }}>
+                {!isMe && (
+                  <div className="coor-chat-sender" style={{ color: msg.user?.role === "organizer" ? "var(--c-jasyl)" : "var(--text)" }}>
                     {senderName}{roleBadge}
-                  </span>
-                  <span style={{ fontSize: "0.6rem", color: "#999", marginLeft: "0.5rem" }}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  </div>
+                )}
+                <div className="message-text">{msg.message}</div>
+                <div className="coor-chat-meta">
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
-                <div className="message-text" style={{ fontSize: "0.85rem", marginTop: "0.15rem" }}>{msg.message}</div>
               </div>
             );
           })
@@ -180,21 +171,19 @@ export default function ChatWindow({ eventId, eventTitle }) {
       </div>
 
       {/* Input controls */}
-      <form onSubmit={handleSendMessage} className="chat-input-area">
+      <form onSubmit={handleSendMessage} className="coor-chat-input-row">
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder={connectionStatus === "connected" ? "Напишите сообщение..." : "Подключение к чату..."}
-          className="chat-input"
+          className="coor-chat-input-field"
           disabled={connectionStatus !== "connected"}
-          style={{ borderRadius: 0 }}
         />
         <button
           type="submit"
-          className="chat-send-btn"
+          className="btn-primary"
           disabled={connectionStatus !== "connected"}
-          style={{ borderRadius: 0 }}
         >
           Отправить
         </button>

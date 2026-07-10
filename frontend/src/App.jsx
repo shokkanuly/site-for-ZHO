@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import "./design.css";
 import {
   getLoggedInUser,
   setLoggedInUser,
@@ -35,11 +36,11 @@ export default function App() {
   };
 
   const CATEGORY_COLORS = {
-    jasyl_el:       { bg: "linear-gradient(135deg, #10B981 0%, #059669 100%)", label: t.catJasyl,       emoji: "🌲" },
-    taza_qazaqstan: { bg: "linear-gradient(135deg, #34D399 0%, #10B981 100%)", label: t.catTaza, emoji: "🧹" },
-    shanyraq:       { bg: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)", label: t.catShanyraq,        emoji: "🤝" },
-    zan_men_tartip: { bg: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)", label: t.catZan, emoji: "🛡️" },
-    general:        { bg: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)", label: t.catAll,           emoji: "📢" },
+    jasyl_el:       { bg: "#10B981", label: t.catJasyl,       emoji: "🌲" },
+    taza_qazaqstan: { bg: "#34D399", label: t.catTaza, emoji: "🧹" },
+    shanyraq:       { bg: "#F59E0B", label: t.catShanyraq,        emoji: "🤝" },
+    zan_men_tartip: { bg: "#3B82F6", label: t.catZan, emoji: "🛡️" },
+    general:        { bg: "#6366f1", label: t.catAll,           emoji: "📢" },
   };
 
   function catColor(cat) {
@@ -827,34 +828,32 @@ export default function App() {
   if (isAdminRoute) {
     if (!dbUser || dbUser.role !== "super_admin") {
       return (
-        <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem", fontFamily: "Inter, sans-serif" }}>
-          <div className="card-item" style={{ maxWidth: "450px", width: "100%", padding: "2.5rem", border: "2px solid #38bdf8", boxShadow: "0 0 25px rgba(56, 189, 248, 0.15)", background: "#0f172a", color: "#f8fafc" }}>
-            <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-              <div style={{ display: "inline-flex", background: "#1e293b", border: "2px solid #38bdf8", borderRadius: "50%", width: "70px", height: "70px", alignItems: "center", justifyContent: "center", fontSize: "1.75rem", color: "#38bdf8", marginBottom: "1rem" }}>
-                🔒
-              </div>
-              <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, textTransform: "uppercase", letterSpacing: "1px" }}>ZHASTAR HQ</h1>
-              <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>Панель Управления Главного Администратора</span>
+        <div className="auth-screen">
+          <div className="auth-card">
+            <div className="auth-header">
+              <div className="auth-icon">🔒</div>
+              <h1 className="auth-title">ZHASTAR HQ</h1>
+              <span className="auth-subtitle">Панель Управления Главного Администратора</span>
             </div>
             {dbUser ? (
-              <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-                <p style={{ color: "#f87171", fontWeight: 700, fontSize: "0.95rem" }}>
+              <div className="access-denied">
+                <p className="access-msg">
                   Доступ запрещен. Эта панель только для Главного Администратора.
                 </p>
-                <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-                  <button className="btn-modern btn-modern-secondary" style={{ flex: 1, padding: "0.6rem" }} onClick={handleLogoutClick}>Выйти</button>
-                  <button className="btn-modern btn-modern-primary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => { window.location.hash = "#"; }}>На главную</button>
+                <div className="auth-actions">
+                  <button className="btn-modern btn-modern-secondary" onClick={handleLogoutClick}>Выйти</button>
+                  <button className="btn-modern btn-modern-primary" onClick={() => { window.location.hash = "#"; }}>На главную</button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleLoginSubmit}>
-                <div className="input-group-modern" style={{ marginBottom: "1.5rem" }}>
-                  <label className="label-modern" style={{ color: "#94a3b8" }}>Имя пользователя (Супер Администратор)</label>
-                  <input type="text" className="input-modern" style={{ background: "#1e293b", color: "white", border: "1px solid #475569" }} placeholder="Введите admin..." value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
+                <div className="input-group-modern">
+                  <label className="label-modern">Имя пользователя (Супер Администратор)</label>
+                  <input type="text" className="input-modern" placeholder="Введите admin..." value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
                 </div>
-                <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", padding: "0.85rem", fontSize: "1rem", background: "#38bdf8", border: "none", color: "#0f172a", fontWeight: 800 }}>Войти в панель управления</button>
-                <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
-                  <button type="button" style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", textDecoration: "underline" }} onClick={() => { window.location.hash = "#"; }}>На главную</button>
+                <button type="submit" className="btn-modern btn-modern-primary">Войти в панель управления</button>
+                <div className="auth-footer">
+                  <button type="button" className="btn-link" onClick={() => { window.location.hash = "#"; }}>На главную</button>
                 </div>
               </form>
             )}
@@ -864,43 +863,61 @@ export default function App() {
     }
 
     return (
-      <div style={{ minHeight: "100vh", background: "#f8fafc", display: "flex", fontFamily: "Inter, sans-serif" }}>
+      <div className="app-root">
         {/* Sidebar */}
-        <aside style={{ width: "280px", background: "#0f172a", color: "#f8fafc", display: "flex", flexDirection: "column", borderRight: "2px solid #111827", padding: "1.5rem 1rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "2rem" }}>
-            <div style={{ background: "#38bdf8", color: "#0f172a", fontWeight: 900, borderRadius: "8px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>Z</div>
+        <aside className="sidebar">
+          <div className="sidebar-brand">
+            <div className="sidebar-icon">Z</div>
             <div>
-              <strong style={{ display: "block", fontSize: "1.1rem" }}>ZHASTAR HQ</strong>
-              <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Супер Администратор</span>
+              <strong>ZHASTAR HQ</strong>
+              <span className="sidebar-role">Супер Администратор</span>
             </div>
           </div>
-          <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
-            <button className={`new-nav-link ${activeAdminTab === "requests" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "requests" ? "#1e293b" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("requests")}>✉️ Обращения ({adminRequests.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "bookings" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "bookings" ? "#1e293b" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("bookings")}>🏢 Бронирования ({adminBookings.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "volunteers" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "volunteers" ? "#1e293b" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("volunteers")}>👥 Все волонтёры ({adminVolunteers.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "create_admin" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "create_admin" ? "#1e293b" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("create_admin")}>👑 Руководители ({adminLeaders.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "events" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "events" ? "#1e293b" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("events")}>🗓️ Мероприятия ({adminEvents.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "news" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "news" ? "#1e293b" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("news")}>📢 Новости центра</button>
+          <nav className="admin-nav">
+            <button className={`nav-link ${activeAdminTab === "requests" ? "active" : ""}`} onClick={() => setActiveAdminTab("requests")}>✉️ Обращения ({adminRequests.length})</button>
+            <button className={`nav-link ${activeAdminTab === "bookings" ? "active" : ""}`} onClick={() => setActiveAdminTab("bookings")}>🏠 Бронирования ({adminBookings.length})</button>
+            <button className={`nav-link ${activeAdminTab === "volunteers" ? "active" : ""}`} onClick={() => setActiveAdminTab("volunteers")}>👥 Все волонтёры ({adminVolunteers.length})</button>
+            <button className={`nav-link ${activeAdminTab === "create_admin" ? "active" : ""}`} onClick={() => setActiveAdminTab("create_admin")}>👑 Руководители ({adminLeaders.length})</button>
+            <button className={`nav-link ${activeAdminTab === "events" ? "active" : ""}`} onClick={() => setActiveAdminTab("events")}>📅 Мероприятия ({adminEvents.length})</button>
+            <button className={`nav-link ${activeAdminTab === "news" ? "active" : ""}`} onClick={() => setActiveAdminTab("news")}>📢 Новости центра</button>
           </nav>
-          <div style={{ borderTop: "1px solid #334155", paddingTop: "1rem" }}>
-            <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginBottom: "0.5rem" }}>Вошли как: {dbUser.first_name}</div>
-            <button className="btn-modern btn-modern-secondary" style={{ width: "100%", padding: "0.5rem" }} onClick={handleLogoutClick}>Выйти</button>
-            <button className="btn-modern btn-modern-primary" style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem", background: "transparent", border: "1px solid #38bdf8", color: "#38bdf8" }} onClick={() => { window.location.hash = "#"; }}>← На сайт</button>
+          <div className="sidebar-footer">
+            <div className="sidebar-user-label">Вошли как: {dbUser.first_name}</div>
+            <button className="btn-secondary btn-sm" onClick={handleLogoutClick}>Выйти</button>
+            <button className="btn-outline btn-sm" onClick={() => { window.location.hash = "#"; }}>← На сайт</button>
           </div>
         </aside>
-        <main style={{ flex: 1, padding: "2.5rem 3rem", overflowY: "auto" }}>
+        <main className="main-content">
           {/* Stats metrics */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "1rem", marginBottom: "2.5rem" }}>
-            <div className="card-item" style={{ padding: "0.95rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900 }}>{adminRequests.length}</div><div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Всего обращений</div></div>
-            <div className="card-item" style={{ padding: "0.95rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900 }}>{adminBookings.length}</div><div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Заявок комнат</div></div>
-            <div className="card-item" style={{ padding: "0.95rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900 }}>{adminVolunteers.length}</div><div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Всего волонтёров</div></div>
-            <div className="card-item" style={{ padding: "0.95rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900 }}>{adminLeaders.length}</div><div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Руководителей</div></div>
-            <div className="card-item" style={{ padding: "0.95rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900 }}>{adminEvents.length}</div><div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Мероприятий</div></div>
-            <div className="card-item" style={{ padding: "0.95rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900 }}>{PROJECTS.length}</div><div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Всего проектов</div></div>
+          <div className="stats-grid">
+            <div className="card-item">
+              <div className="value">{adminRequests.length}</div>
+              <div className="label">Всего обращений</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{adminBookings.length}</div>
+              <div className="label">Заявок комнат</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{adminVolunteers.length}</div>
+              <div className="label">Всего волонтёров</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{adminLeaders.length}</div>
+              <div className="label">Руководителей</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{adminEvents.length}</div>
+              <div className="label">Мероприятий</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{PROJECTS.length}</div>
+              <div className="label">Всего проектов</div>
+            </div>
           </div>
           {activeAdminTab === "requests" && (
             <div className="card-item" style={{ padding: "0" }}>
-              <div className="table-responsive" style={{ border: "none", marginTop: 0 }}>
+              <div className="table-responsive">
                 <table className="table-modern">
                   <thead><tr><th style={{ paddingLeft: "1.5rem" }}>ID</th><th>Отправитель</th><th>Направление</th><th>Тип / Тема</th><th>Описание</th><th>Статус</th><th style={{ paddingRight: "1.5rem" }}>Ответ</th></tr></thead>
                   <tbody>
@@ -1196,34 +1213,32 @@ export default function App() {
   if (isLeaderRoute) {
     if (!dbUser || dbUser.role !== "project_admin") {
       return (
-        <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem", fontFamily: "Inter, sans-serif" }}>
-          <div className="card-item" style={{ maxWidth: "450px", width: "100%", padding: "2.5rem", border: "2px solid #a78bfa", boxShadow: "0 0 25px rgba(167, 139, 250, 0.15)", background: "#0f172a", color: "#f8fafc" }}>
-            <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-              <div style={{ display: "inline-flex", background: "#1e1b4b", border: "2px solid #a78bfa", borderRadius: "50%", width: "70px", height: "70px", alignItems: "center", justifyContent: "center", fontSize: "1.75rem", color: "#a78bfa", marginBottom: "1rem" }}>
-                👑
-              </div>
-              <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, textTransform: "uppercase", letterSpacing: "1px" }}>ZHASTAR LEADERS</h1>
-              <span style={{ fontSize: "0.85rem", color: "#c084fc" }}>Панель Лидера Молодежных Проектов</span>
+        <div className="auth-screen">
+          <div className="auth-card">
+            <div className="auth-header">
+              <div className="auth-icon">👑</div>
+              <h1 className="auth-title">ZHASTAR LEADERS</h1>
+              <span className="auth-subtitle">Панель Лидера Молодежных Проектов</span>
             </div>
             {dbUser ? (
-              <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-                <p style={{ color: "#f87171", fontWeight: 700, fontSize: "0.95rem" }}>
+              <div className="access-denied">
+                <p className="access-msg">
                   Доступ запрещен. Учетная запись @{dbUser.username} не имеет роли Руководителя Проекта.
                 </p>
-                <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-                  <button className="btn-modern btn-modern-secondary" style={{ flex: 1, padding: "0.6rem" }} onClick={handleLogoutClick}>Выйти</button>
-                  <button className="btn-modern btn-modern-primary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => { window.location.hash = "#"; }}>На главную</button>
+                <div className="auth-actions">
+                  <button className="btn-modern btn-modern-secondary" onClick={handleLogoutClick}>Выйти</button>
+                  <button className="btn-modern btn-modern-primary" onClick={() => { window.location.hash = "#"; }}>На главную</button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleLoginSubmit}>
-                <div className="input-group-modern" style={{ marginBottom: "1.5rem" }}>
-                  <label className="label-modern" style={{ color: "#c084fc" }}>Никнейм руководителя проекта</label>
-                  <input type="text" className="input-modern" style={{ background: "#1e1b4b", color: "white", border: "1px solid #475569" }} placeholder="shanyraq_admin..." value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
+                <div className="input-group-modern">
+                  <label className="label-modern">Никнейм руководителя проекта</label>
+                  <input type="text" className="input-modern" placeholder="shanyraq_admin..." value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
                 </div>
-                <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", padding: "0.85rem", fontSize: "1rem", background: "#a78bfa", border: "none", color: "#0f172a", fontWeight: 800 }}>Войти в панель лидера</button>
-                <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
-                  <button type="button" style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", textDecoration: "underline" }} onClick={() => { window.location.hash = "#"; }}>На главную</button>
+                <button type="submit" className="btn-modern btn-modern-primary">Войти в панель лидера</button>
+                <div className="auth-footer">
+                  <button type="button" className="btn-link" onClick={() => { window.location.hash = "#"; }}>На главную</button>
                 </div>
               </form>
             )}
@@ -1235,35 +1250,47 @@ export default function App() {
     const currentProject = PROJECTS.find(p => p.id === dbUser.project_id) || { name: "Проект" };
 
     return (
-      <div style={{ minHeight: "100vh", background: "#f8fafc", display: "flex", fontFamily: "Inter, sans-serif" }}>
+      <div className="app-root">
         {/* Leader Sidebar */}
-        <aside style={{ width: "280px", background: "#1e1b4b", color: "#f8fafc", display: "flex", flexDirection: "column", borderRight: "2px solid #111827", padding: "1.5rem 1rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "2rem" }}>
-            <div style={{ background: "#a78bfa", color: "#1e1b4b", fontWeight: 900, borderRadius: "8px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>👑</div>
+        <aside className="sidebar">
+          <div className="sidebar-brand">
+            <div className="sidebar-icon">👑</div>
             <div>
-              <strong style={{ display: "block", fontSize: "1.1rem" }}>{currentProject.name}</strong>
-              <span style={{ fontSize: "0.75rem", color: "#c084fc" }}>Кабинет Руководителя</span>
+              <strong>{currentProject.name}</strong>
+              <span className="sidebar-role">Кабинет Руководителя</span>
             </div>
           </div>
-          <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
-            <button className={`new-nav-link ${activeAdminTab === "requests" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "requests" ? "#312e81" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("requests")}>✉️ Обращения ({adminRequests.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "coordinators" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "coordinators" ? "#312e81" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("coordinators")}>👥 Координаторы ({adminCoordinators.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "volunteers" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "volunteers" ? "#312e81" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("volunteers")}>👥 Волонтёры проекта ({adminVolunteers.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "news" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "news" ? "#312e81" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("news")}>📢 Новости проекта</button>
-            <button className={`new-nav-link ${activeAdminTab === "events" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "events" ? "#312e81" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("events")}>🗓️ Мероприятия</button>
+          <nav className="admin-nav">
+            <button className={`nav-link ${activeAdminTab === "requests" ? "active" : ""}`} onClick={() => setActiveAdminTab("requests")}>✉️ Обращения ({adminRequests.length})</button>
+            <button className={`nav-link ${activeAdminTab === "coordinators" ? "active" : ""}`} onClick={() => setActiveAdminTab("coordinators")}>👥 Координаторы ({adminCoordinators.length})</button>
+            <button className={`nav-link ${activeAdminTab === "volunteers" ? "active" : ""}`} onClick={() => setActiveAdminTab("volunteers")}>👥 Волонтёры проекта ({adminVolunteers.length})</button>
+            <button className={`nav-link ${activeAdminTab === "news" ? "active" : ""}`} onClick={() => setActiveAdminTab("news")}>📢 Новости проекта</button>
+            <button className={`nav-link ${activeAdminTab === "events" ? "active" : ""}`} onClick={() => setActiveAdminTab("events")}>📅 Мероприятия</button>
           </nav>
-          <div style={{ borderTop: "1px solid #4338ca", paddingTop: "1rem" }}>
-            <div style={{ fontSize: "0.8rem", color: "#c084fc", marginBottom: "0.5rem" }}>Лидер: {dbUser.first_name}</div>
-            <button className="btn-modern btn-modern-secondary" style={{ width: "100%", padding: "0.5rem" }} onClick={handleLogoutClick}>Выйти</button>
-            <button className="btn-modern btn-modern-primary" style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem", background: "transparent", border: "1px solid #a78bfa", color: "#a78bfa" }} onClick={() => { window.location.hash = "#"; }}>← На сайт</button>
+          <div className="sidebar-footer">
+            <div className="sidebar-user-label">Лидер: {dbUser.first_name}</div>
+            <button className="btn-secondary btn-sm" onClick={handleLogoutClick}>Выйти</button>
+            <button className="btn-outline btn-sm" onClick={() => { window.location.hash = "#"; }}>← На сайт</button>
           </div>
         </aside>
-        <main style={{ flex: 1, padding: "2.5rem 3rem", overflowY: "auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2.5rem" }}>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminRequests.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ваши обращения</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminCoordinators.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Координаторов</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminVolunteers.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ваши волонтёры</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{currentProject.name}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Направление</div></div>
+        <main className="main-content">
+          <div className="stats-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+            <div className="card-item">
+              <div className="value">{adminRequests.length}</div>
+              <div className="label">Ваши обращения</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{adminCoordinators.length}</div>
+              <div className="label">Координаторов</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{adminVolunteers.length}</div>
+              <div className="label">Ваши волонтёры</div>
+            </div>
+            <div className="card-item">
+              <div className="value" style={{ fontSize: "1.1rem", wordBreak: "break-word" }}>{currentProject.name}</div>
+              <div className="label">Направление</div>
+            </div>
           </div>
           {activeAdminTab === "requests" && (
             <div className="card-item" style={{ padding: "0" }}>
@@ -1481,34 +1508,32 @@ export default function App() {
   if (isCoordinatorRoute) {
     if (!dbUser || dbUser.role !== "coordinator") {
       return (
-        <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #022c22 0%, #064e3b 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem", fontFamily: "Inter, sans-serif" }}>
-          <div className="card-item" style={{ maxWidth: "450px", width: "100%", padding: "2.5rem", border: "2px solid #34d399", boxShadow: "0 0 25px rgba(52, 211, 153, 0.15)", background: "#022c22", color: "#f8fafc" }}>
-            <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-              <div style={{ display: "inline-flex", background: "#064e3b", border: "2px solid #34d399", borderRadius: "50%", width: "70px", height: "70px", alignItems: "center", justifyContent: "center", fontSize: "1.75rem", color: "#34d399", marginBottom: "1rem" }}>
-                💼
-              </div>
-              <h1 style={{ fontSize: "1.45rem", fontWeight: 800, margin: 0, textTransform: "uppercase", letterSpacing: "1px" }}>ZHASTAR WORKERS</h1>
-              <span style={{ fontSize: "0.85rem", color: "#a7f3d0" }}>Панель Координатора / Работника направления</span>
+        <div className="auth-screen">
+          <div className="auth-card">
+            <div className="auth-header">
+              <div className="auth-icon">💼</div>
+              <h1 className="auth-title">ZHASTAR WORKERS</h1>
+              <span className="auth-subtitle">Панель Координатора / Работника направления</span>
             </div>
             {dbUser ? (
-              <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-                <p style={{ color: "#f87171", fontWeight: 700, fontSize: "0.95rem" }}>
+              <div className="access-denied">
+                <p className="access-msg">
                   Доступ запрещен. Учетная запись @{dbUser.username} не имеет роли Координатора.
                 </p>
-                <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-                  <button className="btn-modern btn-modern-secondary" style={{ flex: 1, padding: "0.6rem" }} onClick={handleLogoutClick}>Выйти</button>
-                  <button className="btn-modern btn-modern-primary" style={{ flex: 1, padding: "0.6rem" }} onClick={() => { window.location.hash = "#"; }}>На главную</button>
+                <div className="auth-actions">
+                  <button className="btn-modern btn-modern-secondary" onClick={handleLogoutClick}>Выйти</button>
+                  <button className="btn-modern btn-modern-primary" onClick={() => { window.location.hash = "#"; }}>На главную</button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleLoginSubmit}>
-                <div className="input-group-modern" style={{ marginBottom: "1.5rem" }}>
-                  <label className="label-modern" style={{ color: "#34d399" }}>Никнейм координатора / работника</label>
-                  <input type="text" className="input-modern" style={{ background: "#064e3b", color: "white", border: "1px solid #047857" }} placeholder="jasylel_coordinator..." value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
+                <div className="input-group-modern">
+                  <label className="label-modern">Никнейм координатора / работника</label>
+                  <input type="text" className="input-modern" placeholder="jasylel_coordinator..." value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
                 </div>
-                <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", padding: "0.85rem", fontSize: "1rem", background: "#34d399", border: "none", color: "#022c22", fontWeight: 800 }}>Войти в кабинет работника</button>
-                <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
-                  <button type="button" style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", textDecoration: "underline" }} onClick={() => { window.location.hash = "#"; }}>На главную</button>
+                <button type="submit" className="btn-modern btn-modern-primary">Войти в кабинет работника</button>
+                <div className="auth-footer">
+                  <button type="button" className="btn-link" onClick={() => { window.location.hash = "#"; }}>На главную</button>
                 </div>
               </form>
             )}
@@ -1521,33 +1546,45 @@ export default function App() {
     const myProjectEvents = adminEvents.filter(ev => ev.project_id === dbUser.project_id);
 
     return (
-      <div style={{ minHeight: "100vh", background: "#f8fafc", display: "flex", fontFamily: "Inter, sans-serif" }}>
+      <div className="app-root">
         {/* Coordinator Sidebar */}
-        <aside style={{ width: "280px", background: "#064e3b", color: "#f8fafc", display: "flex", flexDirection: "column", borderRight: "2px solid #111827", padding: "1.5rem 1rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "2rem" }}>
-            <div style={{ background: "#34d399", color: "#064e3b", fontWeight: 900, borderRadius: "8px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>👷</div>
+        <aside className="sidebar">
+          <div className="sidebar-brand">
+            <div className="sidebar-icon">👷</div>
             <div>
-              <strong style={{ display: "block", fontSize: "1.1rem" }}>{currentProject.name}</strong>
-              <span style={{ fontSize: "0.75rem", color: "#a7f3d0" }}>Координатор проекта</span>
+              <strong>{currentProject.name}</strong>
+              <span className="sidebar-role">Координатор проекта</span>
             </div>
           </div>
-          <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
-            <button className={`new-nav-link ${activeAdminTab === "volunteers" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "volunteers" ? "#047857" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("volunteers")}>👥 База волонтёров ({adminVolunteers.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "events" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "events" ? "#047857" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("events")}>🗓️ Отметки участия ({myProjectEvents.length})</button>
-            <button className={`new-nav-link ${activeAdminTab === "requests" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "requests" ? "#047857" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("requests")}>✉️ Заявки ({adminRequests.length})</button>
+          <nav className="admin-nav">
+            <button className={`nav-link ${activeAdminTab === "volunteers" ? "active" : ""}`} onClick={() => setActiveAdminTab("volunteers")}>👥 База волонтёров ({adminVolunteers.length})</button>
+            <button className={`nav-link ${activeAdminTab === "events" ? "active" : ""}`} onClick={() => setActiveAdminTab("events")}>🗓️ Отметки участия ({myProjectEvents.length})</button>
+            <button className={`nav-link ${activeAdminTab === "requests" ? "active" : ""}`} onClick={() => setActiveAdminTab("requests")}>✉️ Заявки ({adminRequests.length})</button>
           </nav>
-          <div style={{ borderTop: "1px solid #047857", paddingTop: "1rem" }}>
-            <div style={{ fontSize: "0.8rem", color: "#a7f3d0", marginBottom: "0.5rem" }}>Работник: {dbUser.first_name}</div>
-            <button className="btn-modern btn-modern-secondary" style={{ width: "100%", padding: "0.5rem" }} onClick={handleLogoutClick}>Выйти</button>
-            <button className="btn-modern btn-modern-primary" style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem", background: "transparent", border: "1px solid #34d399", color: "#34d399" }} onClick={() => { window.location.hash = "#"; }}>← На сайт</button>
+          <div className="sidebar-footer">
+            <div className="sidebar-user-label">Работник: {dbUser.first_name}</div>
+            <button className="btn-secondary btn-sm" onClick={handleLogoutClick}>Выйти</button>
+            <button className="btn-outline btn-sm" onClick={() => { window.location.hash = "#"; }}>← На сайт</button>
           </div>
         </aside>
-        <main style={{ flex: 1, padding: "2.5rem 3rem", overflowY: "auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem", marginBottom: "2.5rem" }}>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminVolunteers.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Волонтёров</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{myProjectEvents.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Мероприятий</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminRequests.filter(r => r.status === "pending").length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ожидают</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900, color: "var(--accent)" }}>{adminVolunteers.reduce((s, v) => s + (v.hours_logged || 0), 0)} ч.</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Итого часов</div></div>
+        <main className="main-content">
+          <div className="stats-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+            <div className="card-item">
+              <div className="value">{adminVolunteers.length}</div>
+              <div className="label">Волонтёров</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{myProjectEvents.length}</div>
+              <div className="label">Мероприятий</div>
+            </div>
+            <div className="card-item">
+              <div className="value">{adminRequests.filter(r => r.status === "pending").length}</div>
+              <div className="label">Ожидают</div>
+            </div>
+            <div className="card-item">
+              <div className="value" style={{ color: "var(--accent)" }}>{adminVolunteers.reduce((s, v) => s + (v.hours_logged || 0), 0)} ч.</div>
+              <div className="label">Итого часов</div>
+            </div>
           </div>
           {activeAdminTab === "volunteers" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem" }}>
@@ -1907,25 +1944,25 @@ export default function App() {
             <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>{t.calSub}</p>
           </div>
 
-          <div style={{ display: "flex", gap: "1.5rem", margin: "1.5rem 0", flexWrap: "wrap", background: "#f8fafc", padding: "1rem", borderRadius: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
-              <span style={{ display: "inline-block", width: "16px", height: "16px", borderRadius: "4px", background: "linear-gradient(135deg, #10B981, #059669)" }}></span>
+          <div className="cal-legend">
+            <div className="cal-legend-item">
+              <span className="cal-dot cal-dot-event"></span>
               <strong>{t.calLegendEvent}</strong>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
-              <span style={{ display: "inline-block", width: "16px", height: "16px", borderRadius: "4px", background: "linear-gradient(135deg, #8B5CF6, #7C3AED)" }}></span>
+            <div className="cal-legend-item">
+              <span className="cal-dot cal-dot-booking"></span>
               <strong>{t.calLegendBooking}</strong>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "auto" }}>
-              <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>{lang === "ru" ? "Фильтр по дате:" : "Күн бойынша сүзгі:"}</span>
+            <div className="cal-filter">
+              <span>{lang === "ru" ? "Фильтр по дате:" : "Күн бойынша сүзгі:"}</span>
               <input 
                 type="date" 
                 className="input-modern" 
-                style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }} 
+                style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem", width: "auto" }} 
                 value={calendarFilterDate} 
                 onChange={(e) => setCalendarFilterDate(e.target.value)}
               />
-              {calendarFilterDate && <button style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.85rem" }} onClick={() => setCalendarFilterDate("")}>✕</button>}
+              {calendarFilterDate && <button className="btn-link" style={{ marginLeft: "0.25rem" }} onClick={() => setCalendarFilterDate("")}>✕</button>}
             </div>
           </div>
 
@@ -1940,27 +1977,19 @@ export default function App() {
                 return (
                   <div 
                     key={`${item.type}-${item.id}`} 
-                    className="card-item" 
-                    style={{ 
-                      display: "grid", 
-                      gridTemplateColumns: "150px 1fr 200px", 
-                      alignItems: "center", 
-                      padding: "1.25rem 1.5rem", 
-                      gap: "1.5rem",
-                      borderLeft: isEv ? "5px solid #10B981" : "5px solid #8B5CF6"
-                    }}
+                    className={`cal-row ${isEv ? "event" : "booking"}`}
                   >
                     <div>
-                      <strong style={{ fontSize: "1.1rem", color: "var(--text)" }}>{item.time_start} - {item.time_end}</strong>
-                      <span style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
+                      <div className="cal-time-label">{item.time_start} - {item.time_end}</div>
+                      <div className="cal-date-label">
                         {new Date(item.date).toLocaleDateString(lang === "ru" ? "ru-RU" : "kk-KZ", { day: "numeric", month: "long" })}
-                      </span>
+                      </div>
                     </div>
                     <div>
                       <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>{item.title}</h3>
                       <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", margin: "0.25rem 0 0" }}>{item.description}</p>
                     </div>
-                    <div style={{ fontSize: "0.85rem", borderLeft: "1px solid var(--border)", paddingLeft: "1rem" }}>
+                    <div className="cal-info-panel">
                       <div>🏠 <strong>{t.calRoomsHeader}:</strong> {item.room_name}</div>
                       <div style={{ marginTop: "0.25rem" }}>🌿 <strong>{t.calProjectHeader}:</strong> {item.project_name}</div>
                     </div>
@@ -1980,17 +2009,15 @@ export default function App() {
             <h2 className="landing-section-title">{t.srvTitle}</h2>
           </div>
 
-          <div style={{ display: "flex", background: "#f1f5f9", borderRadius: "12px", padding: "0.4rem", marginBottom: "2rem" }}>
+          <div className="tab-switcher">
             <button 
-              className={`new-nav-link`} 
-              style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "none", cursor: "pointer", background: activeServiceTab === "booking" ? "white" : "transparent", fontWeight: 700, boxShadow: activeServiceTab === "booking" ? "0 2px 4px rgba(0,0,0,0.05)" : "none" }}
+              className={`tab-switcher-btn ${activeServiceTab === "booking" ? "active" : ""}`}
               onClick={() => setActiveServiceTab("booking")}
             >
               🏢 {t.srvRoomBooking}
             </button>
             <button 
-              className={`new-nav-link`} 
-              style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "none", cursor: "pointer", background: activeServiceTab === "letter" ? "white" : "transparent", fontWeight: 700, boxShadow: activeServiceTab === "letter" ? "0 2px 4px rgba(0,0,0,0.05)" : "none" }}
+              className={`tab-switcher-btn ${activeServiceTab === "letter" ? "active" : ""}`}
               onClick={() => setActiveServiceTab("letter")}
             >
               ✉️ {t.srvRequestHelp}
@@ -1999,7 +2026,7 @@ export default function App() {
 
           {/* Form: Room Booking */}
           {activeServiceTab === "booking" && (
-            <div className="card-item" style={{ padding: "2.5rem", borderTop: "4px solid var(--c-general)" }}>
+            <div className="form-card">
               <h2 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "1.5rem" }}>{t.srvRoomBooking}</h2>
               <form onSubmit={handleBookingSubmit}>
                 
@@ -2031,17 +2058,16 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Guest Account Info */}
                 {!dbUser && (
-                  <div style={{ borderTop: "1px solid var(--border)", marginTop: "2rem", paddingTop: "1.5rem" }}>
-                    <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--accent)" }}>
+                  <div className="guest-info-box">
+                    <h3 className="guest-info-title">
                       📋 {lang === "ru" ? "Контактная информация заявителя" : "Өтініш берушінің байланыс ақпараты"}
                     </h3>
                     <div className="input-group-modern">
                       <label className="label-modern">{t.srvRequesterName}</label>
                       <input type="text" className="input-modern" placeholder="Иван Иванов" value={bookingData.guest_name} onChange={e => setBookingData({ ...bookingData, guest_name: e.target.value })} required />
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div className="grid-2">
                       <div className="input-group-modern">
                         <label className="label-modern">{t.srvRequesterPhone}</label>
                         <input type="tel" className="input-modern" placeholder="+7 707 123 4567" value={bookingData.guest_phone} onChange={e => setBookingData({ ...bookingData, guest_phone: e.target.value })} required />
@@ -2054,7 +2080,7 @@ export default function App() {
                   </div>
                 )}
 
-                <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "2rem", padding: "1rem" }}>
+                <button type="submit" className="btn-primary btn-full mt-lg">
                   🚀 {t.srvSubmitBooking}
                 </button>
               </form>
@@ -2063,11 +2089,11 @@ export default function App() {
 
           {/* Form: Letter Submission */}
           {activeServiceTab === "letter" && (
-            <div className="card-item" style={{ padding: "2.5rem", borderTop: "4px solid var(--c-general)" }}>
+            <div className="form-card">
               <h2 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "1.5rem" }}>{t.srvRequestHelp}</h2>
               <form onSubmit={handleRequestSubmit}>
                 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div className="grid-2">
                   <div className="input-group-modern">
                     <label className="label-modern">{t.srvTargetProject}</label>
                     <select 
@@ -2107,17 +2133,16 @@ export default function App() {
                   <textarea className="input-modern" rows="4" placeholder="Опишите детали обращения..." value={requestData.description} onChange={e => setRequestData({ ...requestData, description: e.target.value })} style={{ resize: "vertical" }} required />
                 </div>
 
-                {/* Guest Account Info */}
                 {!dbUser && (
-                  <div style={{ borderTop: "1px solid var(--border)", marginTop: "2rem", paddingTop: "1.5rem" }}>
-                    <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--accent)" }}>
+                  <div className="guest-info-box">
+                    <h3 className="guest-info-title">
                       📋 {lang === "ru" ? "Контактная информация заявителя" : "Өтініш берушінің байланыс ақпараты"}
                     </h3>
                     <div className="input-group-modern">
                       <label className="label-modern">{t.srvRequesterName}</label>
                       <input type="text" className="input-modern" placeholder="Иван Иванов" value={requestData.guest_name} onChange={e => setRequestData({ ...requestData, guest_name: e.target.value })} required />
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div className="grid-2">
                       <div className="input-group-modern">
                         <label className="label-modern">{t.srvRequesterPhone}</label>
                         <input type="tel" className="input-modern" placeholder="+7 707 123 4567" value={requestData.guest_phone} onChange={e => setRequestData({ ...requestData, guest_phone: e.target.value })} required />
@@ -2130,7 +2155,7 @@ export default function App() {
                   </div>
                 )}
 
-                <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "2rem", padding: "1rem" }}>
+                <button type="submit" className="btn-primary btn-full mt-lg">
                   🚀 {t.srvSubmitRequest}
                 </button>
               </form>
