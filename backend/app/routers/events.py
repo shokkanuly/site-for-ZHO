@@ -1,9 +1,10 @@
 from typing import List, Optional
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+import random
 
 from app.database import get_db
 from app.models.user import User
@@ -39,28 +40,66 @@ async def list_events(
 @router.post("", response_model=EventResponse, status_code=201)
 async def create_event(
     event_data: EventCreate,
-    tg_user: dict = Depends(get_current_tg_user),
+    authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Create a new volunteer event. The user who creates it becomes the organizer.
+    Create a new volunteer event request.
+    If authenticated, use user account.
+    If anonymous, auto-register using guest details.
     """
-    # Ensure organizer is registered in database
-    user_id = tg_user["id"]
-    organizer = await db.get(User, user_id)
+    user_id = None
+    organizer = None
+    
+    # 1. Try to get authenticated user
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            val = authorization.split(" ", 1)[1]
+            user_id = int(val)
+            organizer = await db.get(User, user_id)
+            if not organizer:
+                raise HTTPException(status_code=401, detail="User not found")
+        except ValueError:
+            pass
+
+    # 2. If not authenticated, auto-register from guest details
     if not organizer:
-        organizer = User(
-            id=user_id,
-            username=tg_user.get("username"),
-            first_name=tg_user.get("first_name", "Organizer"),
-            last_name=tg_user.get("last_name"),
-            role="organizer" # Set organizer role
-        )
-        db.add(organizer)
-        await db.commit()
-        await db.refresh(organizer)
-    elif organizer.role != "organizer":
-        # Automatically elevate to organizer if they create an event
+        if not event_data.guest_name or not event_data.guest_phone:
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required or guest details (name, phone) must be provided."
+            )
+        
+        # Look up existing user by phone
+        phone_clean = event_data.guest_phone.strip()
+        stmt = select(User).where(User.phone == phone_clean)
+        result = await db.execute(stmt)
+        organizer = result.scalar_one_or_none()
+        
+        if not organizer:
+            while True:
+                new_id = random.randint(100000, 999999)
+                existing = await db.get(User, new_id)
+                if not existing:
+                    user_id = new_id
+                    break
+            
+            uname = event_data.guest_name.lower().replace(" ", "_")[:20] + str(random.randint(10, 99))
+            organizer = User(
+                id=user_id,
+                username=uname,
+                first_name=event_data.guest_name,
+                phone=phone_clean,
+                age=event_data.guest_age,
+                role="community_user",
+                points=0
+            )
+            db.add(organizer)
+            await db.commit()
+            await db.refresh(organizer)
+    
+    # Elevate standard users to organizer if creating events
+    if organizer.role not in ["super_admin", "project_admin", "coordinator", "organizer"]:
         organizer.role = "organizer"
         await db.commit()
         await db.refresh(organizer)

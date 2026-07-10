@@ -152,7 +152,8 @@ export default function App() {
   const [proposalData, setProposalData] = useState({
     title: "", description: "", address: "",
     category: "jasyl_el", latitude: 50.0633, longitude: 72.9644,
-    event_date: "", points_reward: 15, project_id: "3", room_id: ""
+    event_date: "", points_reward: 15, project_id: "3", room_id: "",
+    guest_name: "", guest_phone: "", guest_age: ""
   });
 
   // Coordinator specific state
@@ -549,27 +550,48 @@ export default function App() {
     e.preventDefault();
     if (!proposalData.title || !proposalData.description || !proposalData.address || !proposalData.event_date)
       return alert("Заполните все обязательные поля.");
-    if (!isLoggedIn()) { setIsLoginModalOpen(true); return; }
+    
+    if (!isLoggedIn()) {
+      if (!proposalData.guest_name || !proposalData.guest_phone) {
+        return alert("Укажите ваше имя и контактный телефон, чтобы оставить заявку.");
+      }
+    }
+
     try {
+      const payload = {
+        title: proposalData.title,
+        description: proposalData.description,
+        address: proposalData.address,
+        latitude: parseFloat(proposalData.latitude),
+        longitude: parseFloat(proposalData.longitude),
+        event_date: new Date(proposalData.event_date).toISOString(),
+        points_reward: parseInt(proposalData.points_reward, 10),
+        category: proposalData.category,
+        project_id: proposalData.project_id ? parseInt(proposalData.project_id, 10) : null,
+        room_id: proposalData.room_id ? parseInt(proposalData.room_id, 10) : null
+      };
+
+      if (!isLoggedIn()) {
+        payload.guest_name = proposalData.guest_name;
+        payload.guest_phone = proposalData.guest_phone;
+        payload.guest_age = proposalData.guest_age ? parseInt(proposalData.guest_age, 10) : null;
+      }
+
       const res = await fetch("http://localhost:8000/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
-        body: JSON.stringify({
-          ...proposalData,
-          latitude: parseFloat(proposalData.latitude),
-          longitude: parseFloat(proposalData.longitude),
-          event_date: new Date(proposalData.event_date).toISOString(),
-          points_reward: parseInt(proposalData.points_reward, 10),
-          project_id: proposalData.project_id ? parseInt(proposalData.project_id, 10) : null,
-          room_id: proposalData.room_id ? parseInt(proposalData.room_id, 10) : null
-        }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
-        alert("Акция опубликована на портале ZHASTAR!");
-        setProposalData({ title: "", description: "", address: "", category: "jasyl_el", latitude: 50.0633, longitude: 72.9644, event_date: "", points_reward: 15, project_id: "3", room_id: "" });
+        alert("Заявка успешно отправлена на портал ZHASTAR!");
+        setProposalData({
+          title: "", description: "", address: "",
+          category: "jasyl_el", latitude: 50.0633, longitude: 72.9644,
+          event_date: "", points_reward: 15, project_id: "3", room_id: "",
+          guest_name: "", guest_phone: "", guest_age: ""
+        });
         
         if (isLeaderRoute) {
-          alert("Акция успешно предложена лидером!");
           loadAdminData();
         } else {
           setActiveTab("home"); 
@@ -2298,7 +2320,26 @@ export default function App() {
                 <input type="datetime-local" className="input-modern" value={proposalData.event_date} onChange={e => setProposalData({ ...proposalData, event_date: e.target.value })} required />
               </div>
 
-              <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "1rem", padding: "1rem", fontSize: "1.05rem" }}>
+              {!isLoggedIn() && (
+                <>
+                  <div className="input-group-modern">
+                    <label className="label-modern">{t.srvRequesterName}</label>
+                    <input type="text" className="input-modern" placeholder="Имя" value={proposalData.guest_name} onChange={e => setProposalData({ ...proposalData, guest_name: e.target.value })} required />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "0.5rem" }}>
+                    <div className="input-group-modern">
+                      <label className="label-modern">{t.srvRequesterPhone}</label>
+                      <input type="tel" className="input-modern" placeholder="+7..." value={proposalData.guest_phone} onChange={e => setProposalData({ ...proposalData, guest_phone: e.target.value })} required />
+                    </div>
+                    <div className="input-group-modern">
+                      <label className="label-modern">{t.srvRequesterAge}</label>
+                      <input type="number" className="input-modern" placeholder="18" value={proposalData.guest_age} onChange={e => setProposalData({ ...proposalData, guest_age: e.target.value })} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "1.5rem", padding: "1rem", fontSize: "1.05rem" }}>
                 {t.propSubmit}
               </button>
             </form>

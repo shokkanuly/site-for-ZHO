@@ -16,7 +16,9 @@ class EventBase(BaseModel):
     room_id: Optional[int] = None
 
 class EventCreate(EventBase):
-    pass
+    guest_name: Optional[str] = None
+    guest_phone: Optional[str] = None
+    guest_age: Optional[int] = None
 
 class EventUpdate(BaseModel):
     title: Optional[str] = None
