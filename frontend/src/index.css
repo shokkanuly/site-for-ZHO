@@ -2086,3 +2086,125 @@ button {
     width: 100%;
   }
 }
+
+/* --- EXTENDED STYLES FOR ZHASTAR PORTAL (CALENDAR, EMULATOR, ADM DASHBOARD) --- */
+
+.emulator-glass-panel {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #111827;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  color: #111827;
+}
+
+.emulator-glass-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.badge-modern {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border-radius: 99px;
+  text-transform: uppercase;
+}
+
+.badge-green {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #34D399;
+}
+
+.badge-red {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #F87171;
+}
+
+.badge-yellow {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FBBF24;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 2px solid #111827;
+  background: #FFFFFF;
+  margin-top: 1rem;
+}
+
+.table-modern {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.table-modern th {
+  background: #F8FAFC;
+  padding: 1rem;
+  font-weight: 800;
+  color: #475569;
+  border-bottom: 2px solid #111827;
+}
+
+.table-modern td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table-modern tr:last-child td {
+  border-bottom: none;
+}
+
+/* Color palettes variables matching the core design */
+:root {
+  --c-general: #7C3AED;
+  --c-shanyraq: #D97706;
+  --c-jasyl: #059669;
+  --c-taza: #10B981;
+  --c-zan: #2563EB;
+}
+
+/* Custom border overrides for direction cards */
+.border-shanyraq { border-top: 4px solid var(--c-shanyraq) !important; }
+.border-jasyl_el { border-top: 4px solid var(--c-jasyl) !important; }
+.border-taza_qazaqstan { border-top: 4px solid var(--c-taza) !important; }
+.border-zan_men_tartip { border-top: 4px solid var(--c-zan) !important; }
+.border-general { border-top: 4px solid var(--c-general) !important; }
+
+/* Responsive adjustments for emulator */
+@media (max-width: 768px) {
+  .emulator-glass-panel {
+    bottom: 90px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .emulator-glass-panel select {
+    width: 150px !important;
+  }
+}
+

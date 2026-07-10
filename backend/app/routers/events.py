@@ -206,11 +206,17 @@ async def mark_registration_complete(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
         
-    # Security: Verify the caller is the organizer of the event
-    if event.organizer_id != tg_user["id"]:
+    # Security: Verify the caller is the organizer OR a project admin / coordinator for this project
+    caller = await db.get(User, tg_user["id"])
+    is_authorized = (
+        event.organizer_id == tg_user["id"] or
+        (caller and caller.role == "super_admin") or
+        (caller and caller.role in ["project_admin", "coordinator"] and caller.project_id == event.project_id)
+    )
+    if not is_authorized:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the event organizer can mark volunteer registrations complete"
+            detail="Only the event organizer, a project leader, or a coordinator of the project can mark completions."
         )
 
     stmt = select(EventRegistration).where(

@@ -12,6 +12,8 @@ class EventBase(BaseModel):
     event_date: datetime
     category: str = "general"
     points_reward: int = 10
+    project_id: Optional[int] = None
+    room_id: Optional[int] = None
 
 class EventCreate(EventBase):
     pass
@@ -26,6 +28,8 @@ class EventUpdate(BaseModel):
     status: Optional[str] = None
     category: Optional[str] = None
     points_reward: Optional[int] = None
+    project_id: Optional[int] = None
+    room_id: Optional[int] = None
 
 class EventResponse(EventBase):
     id: int
@@ -35,6 +39,7 @@ class EventResponse(EventBase):
     organizer: Optional[UserResponse] = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 
 class EventRegistrationCreate(BaseModel):

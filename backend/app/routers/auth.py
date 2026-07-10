@@ -13,15 +13,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 import random
 
 @router.post("/login", response_model=UserResponse)
-async def login_or_register(
-    payload: Dict[str, str], # Expects {"username": "...", "first_name": "..."}
+async def login(
+    payload: Dict[str, str], # Expects {"username": "..."}
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Login or register a volunteer using their username.
+    Login a user using their username.
     """
     username = payload.get("username", "").strip().lower()
-    first_name = payload.get("first_name", "").strip()
 
     if not username:
         raise HTTPException(status_code=400, detail="Username is required")
@@ -36,33 +35,10 @@ async def login_or_register(
     user = result.scalar_one_or_none()
 
     if not user:
-        if not first_name:
-            raise HTTPException(status_code=400, detail="First name is required to register a new account")
-
-        # Generate a unique integer ID
-        while True:
-            new_id = random.randint(100000, 999999)
-            existing = await db.get(User, new_id)
-            if not existing:
-                user_id = new_id
-                break
-
-        user = User(
-            id=user_id,
-            username=username,
-            first_name=first_name,
-            role="volunteer",
-            points=0
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Пользователь не найден. Обратитесь к администратору для создания учетной записи."
         )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-    else:
-        # If user exists and first_name was sent, update it
-        if first_name:
-            user.first_name = first_name
-            await db.commit()
-            await db.refresh(user)
 
     return user
 
