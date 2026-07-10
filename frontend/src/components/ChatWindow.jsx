@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getLoggedInUser, getAuthToken } from "../utils/auth";
+import { API_BASE, WS_BASE } from "../config";
 
 export default function ChatWindow({ eventId, eventTitle }) {
   const [messages, setMessages] = useState([]);
@@ -17,7 +18,7 @@ export default function ChatWindow({ eventId, eventTitle }) {
   // Load chat history via REST API
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/events/${eventId}/messages`);
+      const response = await fetch(`${API_BASE}/events/${eventId}/messages`);
       if (response.ok) {
         const historyData = await response.json();
         setMessages(historyData);
@@ -33,7 +34,7 @@ export default function ChatWindow({ eventId, eventTitle }) {
     }
 
     setConnectionStatus("connecting");
-    const wsUrl = `ws://localhost:8000/api/events/${eventId}/chat?token=${encodeURIComponent(initData)}`;
+    const wsUrl = `${WS_BASE}/events/${eventId}/chat?token=${encodeURIComponent(initData)}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

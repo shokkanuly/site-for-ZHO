@@ -1,3 +1,4 @@
+import { API_BASE } from "./config";
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import "./design.css";
@@ -230,7 +231,7 @@ export default function App() {
   const refreshUserProfile = async () => {
     if (!isLoggedIn()) return;
     try {
-      const res = await fetch("http://localhost:8000/api/auth/me", { headers: getAuthHeader() });
+      const res = await fetch(`${API_BASE}/auth/me`, { headers: getAuthHeader() });
       if (res.ok) { 
         const d = await res.json(); 
         setDbUser(d); 
@@ -268,7 +269,7 @@ export default function App() {
     e.preventDefault();
     if (!loginUsername.trim()) return alert("Введите никнейм");
     try {
-      const res = await fetch("http://localhost:8000/api/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: loginUsername.trim() }),
@@ -311,21 +312,21 @@ export default function App() {
   const loadEvents = async () => {
     try {
       const q = selectedCategory !== "all" ? `&category=${selectedCategory}` : "";
-      const res = await fetch(`http://localhost:8000/api/events?status_filter=active${q}`);
+      const res = await fetch(`${API_BASE}/events?status_filter=active${q}`);
       if (res.ok) setEvents(await res.json());
     } catch {}
   };
 
   const loadNews = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/news");
+      const res = await fetch(`${API_BASE}/news`);
       if (res.ok) setNewsList(await res.json());
     } catch {}
   };
 
   const loadRooms = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/bookings/rooms");
+      const res = await fetch(`${API_BASE}/bookings/rooms`);
       if (res.ok) {
         const data = await res.json();
         setRooms(data);
@@ -338,14 +339,14 @@ export default function App() {
 
   const loadCalendar = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/calendar");
+      const res = await fetch(`${API_BASE}/calendar`);
       if (res.ok) setCalendarItems(await res.json());
     } catch {}
   };
 
   const loadLeaderboard = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/auth/leaderboard?limit=10");
+      const res = await fetch(`${API_BASE}/auth/leaderboard?limit=10`);
       if (res.ok) setLeaderboard(await res.json());
     } catch {}
   };
@@ -353,8 +354,8 @@ export default function App() {
   const loadEventDetails = async (id) => {
     try {
       const [evRes, volRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/events/${id}`),
-        fetch(`http://localhost:8000/api/events/${id}/volunteers`),
+        fetch(`${API_BASE}/events/${id}`),
+        fetch(`${API_BASE}/events/${id}/volunteers`),
       ]);
       if (evRes.ok) setSelectedEvent(await evRes.json());
       if (volRes.ok) {
@@ -367,7 +368,7 @@ export default function App() {
 
   const loadCoordEventDetails = async (id) => {
     try {
-      const volRes = await fetch(`http://localhost:8000/api/events/${id}/volunteers`);
+      const volRes = await fetch(`${API_BASE}/events/${id}/volunteers`);
       if (volRes.ok) {
         setCoordEventVolunteers(await volRes.json());
       }
@@ -378,8 +379,8 @@ export default function App() {
   const loadMyData = async () => {
     try {
       const [bRes, rRes] = await Promise.all([
-        fetch("http://localhost:8000/api/bookings/my", { headers: getAuthHeader() }),
-        fetch("http://localhost:8000/api/requests/my", { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/bookings/my`, { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/requests/my`, { headers: getAuthHeader() }),
       ]);
       if (bRes.ok) setMyBookings(await bRes.json());
       if (rRes.ok) setMyRequests(await rRes.json());
@@ -390,10 +391,10 @@ export default function App() {
   const loadAdminData = async () => {
     try {
       const [reqsRes, bksRes, volsRes, evsRes] = await Promise.all([
-        fetch("http://localhost:8000/api/admin/requests", { headers: getAuthHeader() }),
-        fetch("http://localhost:8000/api/admin/bookings", { headers: getAuthHeader() }),
-        fetch("http://localhost:8000/api/admin/volunteers", { headers: getAuthHeader() }),
-        fetch("http://localhost:8000/api/admin/events", { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/admin/requests`, { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/admin/bookings`, { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/admin/volunteers`, { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/admin/events`, { headers: getAuthHeader() }),
       ]);
       if (reqsRes.ok) setAdminRequests(await reqsRes.json());
       if (bksRes.ok) setAdminBookings(await bksRes.json());
@@ -401,12 +402,12 @@ export default function App() {
       if (evsRes.ok) setAdminEvents(await evsRes.json());
 
       if (dbUser && (dbUser.role === "super_admin" || dbUser.role === "project_admin")) {
-        const crdRes = await fetch("http://localhost:8000/api/admin/coordinators", { headers: getAuthHeader() });
+        const crdRes = await fetch(`${API_BASE}/admin/coordinators`, { headers: getAuthHeader() });
         if (crdRes.ok) setAdminCoordinators(await crdRes.json());
       }
 
       if (dbUser && dbUser.role === "super_admin") {
-        const ldrRes = await fetch("http://localhost:8000/api/admin/project-admins", { headers: getAuthHeader() });
+        const ldrRes = await fetch(`${API_BASE}/admin/project-admins`, { headers: getAuthHeader() });
         if (ldrRes.ok) setAdminLeaders(await ldrRes.json());
       }
     } catch {}
@@ -416,9 +417,9 @@ export default function App() {
     setSelectedLeader(leader);
     try {
       const [crdRes, volRes, reqRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/admin/coordinators`, { headers: getAuthHeader() }),
-        fetch(`http://localhost:8000/api/admin/volunteers`, { headers: getAuthHeader() }),
-        fetch(`http://localhost:8000/api/admin/requests`, { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/admin/coordinators`, { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/admin/volunteers`, { headers: getAuthHeader() }),
+        fetch(`${API_BASE}/admin/requests`, { headers: getAuthHeader() }),
       ]);
       const allCoords  = crdRes.ok  ? await crdRes.json()  : [];
       const allVols    = volRes.ok  ? await volRes.json()  : [];
@@ -435,21 +436,21 @@ export default function App() {
   // --- ACTIONS ---
   const handleRegister = async () => {
     if (!selectedEvent || !isLoggedIn()) return;
-    const res = await fetch(`http://localhost:8000/api/events/${selectedEvent.id}/register`, { method: "POST", headers: getAuthHeader() });
+    const res = await fetch(`${API_BASE}/events/${selectedEvent.id}/register`, { method: "POST", headers: getAuthHeader() });
     if (res.ok) { loadEventDetails(selectedEvent.id); refreshUserProfile(); }
     else { const e = await res.json(); alert(e.detail); }
   };
 
   const handleCancelRegistration = async () => {
     if (!selectedEvent || !isLoggedIn()) return;
-    const res = await fetch(`http://localhost:8000/api/events/${selectedEvent.id}/register`, { method: "DELETE", headers: getAuthHeader() });
+    const res = await fetch(`${API_BASE}/events/${selectedEvent.id}/register`, { method: "DELETE", headers: getAuthHeader() });
     if (res.ok) loadEventDetails(selectedEvent.id);
   };
 
   const handleCompleteVolunteer = async (volUserId) => {
     const evId = selectedEvent ? selectedEvent.id : (selectedCoordEvent ? selectedCoordEvent.id : null);
     if (!evId) return;
-    const res = await fetch(`http://localhost:8000/api/events/${evId}/complete/${volUserId}`, { method: "POST", headers: getAuthHeader() });
+    const res = await fetch(`${API_BASE}/events/${evId}/complete/${volUserId}`, { method: "POST", headers: getAuthHeader() });
     if (res.ok) {
       alert("Присутствие подтверждено!");
       if (selectedEvent) loadEventDetails(evId);
@@ -467,7 +468,7 @@ export default function App() {
     const targetProjId = dbUser.role === "project_admin" ? dbUser.project_id : (newsForm.project_id ? parseInt(newsForm.project_id, 10) : null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/news", {
+      const res = await fetch(`${API_BASE}/news`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
@@ -497,7 +498,7 @@ export default function App() {
     const projId = dbUser?.project_id || categoryToProject[eventForm.category] || 1;
 
     try {
-      const res = await fetch("http://localhost:8000/api/events", {
+      const res = await fetch(`${API_BASE}/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
@@ -535,7 +536,7 @@ export default function App() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/api/bookings", {
+      const res = await fetch(`${API_BASE}/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
@@ -582,7 +583,7 @@ export default function App() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/api/requests", {
+      const res = await fetch(`${API_BASE}/requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
@@ -649,7 +650,7 @@ export default function App() {
         payload.guest_age   = proposalData.guest_age ? parseInt(proposalData.guest_age, 10) : null;
       }
 
-      const res = await fetch("http://localhost:8000/api/requests", {
+      const res = await fetch(`${API_BASE}/requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify(payload),
@@ -676,7 +677,7 @@ export default function App() {
     e.preventDefault();
     if (!adminForm.username || !adminForm.first_name || !adminForm.project_id) return alert("Заполните все поля");
     try {
-      const res = await fetch("http://localhost:8000/api/admin/project-admins", {
+      const res = await fetch(`${API_BASE}/admin/project-admins`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
@@ -700,7 +701,7 @@ export default function App() {
     e.preventDefault();
     if (!coordForm.username || !coordForm.first_name) return alert("Никнейм и имя обязательны.");
     try {
-      const res = await fetch("http://localhost:8000/api/admin/coordinators", {
+      const res = await fetch(`${API_BASE}/admin/coordinators`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
@@ -740,7 +741,7 @@ export default function App() {
         payload.coordinator_id = parseInt(volForm.coordinator_id, 10);
       }
 
-      const res = await fetch("http://localhost:8000/api/admin/volunteers", {
+      const res = await fetch(`${API_BASE}/admin/volunteers`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify(payload)
@@ -758,7 +759,7 @@ export default function App() {
 
   const handleUpdateBookingStatus = async (bookingId, newStatus) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/admin/bookings/${bookingId}/status`, {
+      const res = await fetch(`${API_BASE}/admin/bookings/${bookingId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({ status: newStatus })
@@ -777,7 +778,7 @@ export default function App() {
   const handleUpdateRequestStatus = async (requestId, newStatus) => {
     const responseText = adminReplyTexts[requestId] || "";
     try {
-      const res = await fetch(`http://localhost:8000/api/admin/requests/${requestId}/status`, {
+      const res = await fetch(`${API_BASE}/admin/requests/${requestId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({ status: newStatus, response: responseText })

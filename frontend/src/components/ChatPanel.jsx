@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { API_BASE, WS_BASE } from "../config";
 
 /**
  * ChatPanel — Real-time staff chat (multi-room, WebSocket)
@@ -23,8 +24,8 @@ export default function ChatPanel({ userId, userRole, projectId, userName }) {
   const activeRoomRef = useRef(null); // keep track of active room without closure stale
   activeRoomRef.current = activeRoom;
 
-  const API     = "http://localhost:8000/api";
-  const WS_BASE = "ws://localhost:8000/api";
+  const API     = API_BASE;
+  const WS_BASE = WS_BASE;
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
