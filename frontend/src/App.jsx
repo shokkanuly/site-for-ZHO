@@ -10,6 +10,7 @@ import {
 import MapWidget from "./components/MapWidget";
 import ChatWindow from "./components/ChatWindow";
 import ChatPanel from "./components/ChatPanel";
+import RequestDetailModal from "./components/RequestDetailModal";
 import { translations } from "./utils/i18n";
 
 export default function App() {
@@ -1183,8 +1184,8 @@ export default function App() {
             </div>
           )}
         </main>
-        {/* Real-time Staff Chat */}
         <ChatPanel userId={dbUser.id} userRole={dbUser.role} projectId={dbUser.project_id} />
+        <RequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
       </div>
     );
   }
@@ -1468,8 +1469,8 @@ export default function App() {
             </div>
           )}
         </main>
-        {/* Real-time Staff Chat */}
         <ChatPanel userId={dbUser.id} userRole={dbUser.role} projectId={dbUser.project_id} />
+        <RequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
       </div>
     );
   }
@@ -1646,6 +1647,7 @@ export default function App() {
         </main>
         {/* Real-time Staff Chat */}
         <ChatPanel userId={dbUser.id} userRole={dbUser.role} projectId={dbUser.project_id} />
+        <RequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
       </div>
     );
   }
@@ -2609,50 +2611,8 @@ export default function App() {
         </button>
       </nav>
 
-      {/* --- MODAL: Request Detail --- */}
-      {selectedRequest && (
-        <div className="modal-backdrop" onClick={() => setSelectedRequest(null)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: "580px" }}>
-            <button onClick={() => setSelectedRequest(null)} style={{ position: "absolute", top: "1rem", right: "1rem", background: "#F1F5F9", border: "none", width: "32px", height: "32px", borderRadius: "50%", cursor: "pointer", fontSize: "1rem" }}>✕</button>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
-              <div style={{ width: "44px", height: "44px", background: "var(--accent)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem", color: "#fff", flexShrink: 0 }}>✉️</div>
-              <div>
-                <h2 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0 }}>{selectedRequest.subject}</h2>
-                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>#{selectedRequest.id} · {selectedRequest.type} · {getStatusBadge(selectedRequest.status)}</span>
-              </div>
-            </div>
-
-            <div style={{ background: "#f8fafc", borderRadius: "0.75rem", padding: "1rem", marginBottom: "1.25rem", border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>Описание</div>
-              <p style={{ margin: 0, lineHeight: 1.7, color: "var(--text)", whiteSpace: "pre-wrap" }}>{selectedRequest.description}</p>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.25rem" }}>
-              <div style={{ background: "#f8fafc", borderRadius: "0.75rem", padding: "0.75rem", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "0.25rem" }}>Заявитель</div>
-                <div style={{ fontWeight: 700 }}>{selectedRequest.requester?.first_name || selectedRequest.guest_name || "—"}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{selectedRequest.requester?.phone || selectedRequest.guest_phone || "—"}</div>
-              </div>
-              <div style={{ background: "#f8fafc", borderRadius: "0.75rem", padding: "0.75rem", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "0.25rem" }}>Направление</div>
-                <div style={{ fontWeight: 700 }}>{selectedRequest.target_project?.name || "Бас кеңсе / HQ"}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                  {selectedRequest.created_at ? new Date(selectedRequest.created_at).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "—"}
-                </div>
-              </div>
-            </div>
-
-            {selectedRequest.response && (
-              <div style={{ background: "rgba(124,58,237,0.06)", borderRadius: "0.75rem", padding: "0.85rem 1rem", border: "1px solid rgba(124,58,237,0.15)", marginBottom: "1rem" }}>
-                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", marginBottom: "0.25rem" }}>Ответ руководителя</div>
-                <p style={{ margin: 0, color: "var(--text)" }}>{selectedRequest.response}</p>
-              </div>
-            )}
-
-            <button onClick={() => setSelectedRequest(null)} className="btn-modern btn-modern-secondary" style={{ width: "100%", marginTop: "0.5rem" }}>Закрыть</button>
-          </div>
-        </div>
-      )}
+      {/* Request Detail Modal (uses React portal — works from all routes) */}
+      <RequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
     </div>
   );
 }
