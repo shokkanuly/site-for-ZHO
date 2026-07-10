@@ -26,4 +26,5 @@ class User(Base):
     news = relationship("News", back_populates="author")
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
     requests = relationship("Request", back_populates="requester", cascade="all, delete-orphan")
+    direct_messages = relationship("DirectChatMessage", back_populates="sender", cascade="all, delete-orphan")
 

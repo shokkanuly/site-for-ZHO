@@ -9,6 +9,7 @@ from datetime import datetime, date
 from app.config import settings
 from app.database import Base, engine, AsyncSessionLocal
 from app.routers import auth, events, chat, maps, admin, bookings, requests, news, calendar
+from app.routers import direct_chat
 from app.services.redis_client import check_redis_connection
 
 # Models to ensure they are loaded in metadata
@@ -20,6 +21,7 @@ from app.models.event import Event
 from app.models.news import News
 from app.models.booking import Booking
 from app.models.request import Request
+from app.models.direct_chat import DirectChatRoom, DirectChatMessage
 
 async def seed_data():
     """Seeds the default lookup data and administrators for testing/demonstration."""
@@ -193,15 +195,39 @@ async def seed_data():
             await db.commit()
 
 
+async def reset_sequences():
+    """Reset PostgreSQL sequences after explicit-ID seeding to avoid duplicate key errors."""
+    from sqlalchemy import text
+    async with AsyncSessionLocal() as db:
+        try:
+            # Check if we're on PostgreSQL (not SQLite)
+            result = await db.execute(text("SELECT 1 FROM information_schema.sequences WHERE sequence_name='events_id_seq' LIMIT 1"))
+            if result.fetchone():
+                await db.execute(text("SELECT setval('events_id_seq', (SELECT COALESCE(MAX(id), 1) FROM events))"))
+                await db.execute(text("SELECT setval('bookings_id_seq', (SELECT COALESCE(MAX(id), 1) FROM bookings))"))
+                await db.execute(text("SELECT setval('requests_id_seq', (SELECT COALESCE(MAX(id), 1) FROM requests))"))
+                await db.execute(text("SELECT setval('chat_messages_id_seq', (SELECT COALESCE(MAX(id), 1) FROM chat_messages))"))
+                await db.execute(text("SELECT setval('event_registrations_id_seq', (SELECT COALESCE(MAX(id), 1) FROM event_registrations))"))
+                await db.execute(text("SELECT setval('news_id_seq', (SELECT COALESCE(MAX(id), 1) FROM news))"))
+                await db.execute(text("SELECT setval('rooms_id_seq', (SELECT COALESCE(MAX(id), 1) FROM rooms))"))
+                await db.execute(text("SELECT setval('projects_id_seq', (SELECT COALESCE(MAX(id), 1) FROM projects))"))
+                await db.commit()
+                print("✅ PostgreSQL sequences reset successfully")
+        except Exception as e:
+            print(f"ℹ️ Sequence reset skipped (SQLite or error): {e}")
+            await db.rollback()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables on startup (drop and recreate to ensure schema alignment)
+    # Create tables that don't exist yet (no drop — preserves data)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     
-    # Run data seeding
+    # Run data seeding (only inserts if tables are empty)
     await seed_data()
+    
+    # Reset auto-increment sequences to avoid duplicate key errors
+    await reset_sequences()
     
     yield
     # Cleanup tasks if any
@@ -233,6 +259,7 @@ app.include_router(bookings.router, prefix="/api")
 app.include_router(requests.router, prefix="/api")
 app.include_router(news.router, prefix="/api")
 app.include_router(calendar.router, prefix="/api")
+app.include_router(direct_chat.router, prefix="/api")
 
 @app.get("/api/health")
 async def health_check():

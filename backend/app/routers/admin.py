@@ -506,3 +506,69 @@ async def create_coordinator(
     await db.refresh(new_coord)
     return new_coord
 
+
+# ─── LEADERS DETAIL (SUPER ADMIN) ───
+@router.get("/leaders", response_model=List[UserResponse])
+async def list_leaders(
+    current_user: User = Depends(get_current_tg_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Super Admin: list all project leaders (project_admins)."""
+    await verify_admin_role(current_user, db)
+    stmt = (
+        select(User)
+        .where(User.role == "project_admin")
+        .order_by(User.project_id.asc())
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+@router.get("/stats")
+async def get_admin_stats(
+    current_user: User = Depends(get_current_tg_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Aggregated statistics for dashboard cards — scoped by caller role."""
+    from app.models.volunteer_profile import VolunteerProfile
+    from sqlalchemy import func
+    admin = await verify_admin_role(current_user, db)
+
+    async def count(stmt_inner):
+        r = await db.execute(stmt_inner)
+        return r.scalar_one_or_none() or 0
+
+    if admin.role == "super_admin":
+        total_requests     = await count(select(func.count()).select_from(Request))
+        total_bookings     = await count(select(func.count()).select_from(Booking))
+        total_volunteers   = await count(select(func.count()).select_from(VolunteerProfile))
+        total_leaders      = await count(select(func.count()).select_from(User).where(User.role == "project_admin"))
+        total_coordinators = await count(select(func.count()).select_from(User).where(User.role == "coordinator"))
+        total_events       = await count(select(func.count()).select_from(Event))
+        total_projects     = await count(select(func.count()).select_from(Project))
+    elif admin.role == "project_admin":
+        total_requests     = await count(select(func.count()).select_from(Request).where(Request.target_project_id == admin.project_id))
+        total_bookings     = await count(select(func.count()).select_from(Booking))
+        total_volunteers   = await count(select(func.count()).select_from(VolunteerProfile).where(VolunteerProfile.project_id == admin.project_id))
+        total_leaders      = 0
+        total_coordinators = await count(select(func.count()).select_from(User).where(and_(User.role == "coordinator", User.project_id == admin.project_id)))
+        total_events       = await count(select(func.count()).select_from(Event).where(Event.project_id == admin.project_id))
+        total_projects     = 1
+    else:
+        total_requests     = 0
+        total_bookings     = 0
+        total_volunteers   = await count(select(func.count()).select_from(VolunteerProfile).where(VolunteerProfile.coordinator_id == admin.id))
+        total_leaders      = 0
+        total_coordinators = 0
+        total_events       = await count(select(func.count()).select_from(Event).where(Event.project_id == admin.project_id))
+        total_projects     = 0
+
+    return {
+        "total_requests":     total_requests,
+        "total_bookings":     total_bookings,
+        "total_volunteers":   total_volunteers,
+        "total_leaders":      total_leaders,
+        "total_coordinators": total_coordinators,
+        "total_events":       total_events,
+        "total_projects":     total_projects,
+    }

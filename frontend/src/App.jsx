@@ -9,6 +9,7 @@ import {
 } from "./utils/auth";
 import MapWidget from "./components/MapWidget";
 import ChatWindow from "./components/ChatWindow";
+import ChatPanel from "./components/ChatPanel";
 import { translations } from "./utils/i18n";
 
 export default function App() {
@@ -162,6 +163,19 @@ export default function App() {
 
   // Calendar View State
   const [calendarFilterDate, setCalendarFilterDate] = useState("");
+
+  // Leader/Admin direct event creation form state
+  const [eventForm, setEventForm] = useState({
+    title: "", description: "", address: "",
+    category: "jasyl_el", event_date: "", points_reward: 15
+  });
+
+  // Request detail modal state (click to expand)
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
+  // Leader detail panel state (super_admin clicking on a leader)
+  const [selectedLeader, setSelectedLeader] = useState(null);
+  const [leaderDetail, setLeaderDetail] = useState({ coordinators: [], volunteers: [], requests: [] });
 
   // Router Check
   useEffect(() => {
@@ -396,6 +410,26 @@ export default function App() {
     } catch {}
   };
 
+  const loadLeaderDetail = async (leader) => {
+    setSelectedLeader(leader);
+    try {
+      const [crdRes, volRes, reqRes] = await Promise.all([
+        fetch(`http://localhost:8000/api/admin/coordinators`, { headers: getAuthHeader() }),
+        fetch(`http://localhost:8000/api/admin/volunteers`, { headers: getAuthHeader() }),
+        fetch(`http://localhost:8000/api/admin/requests`, { headers: getAuthHeader() }),
+      ]);
+      const allCoords  = crdRes.ok  ? await crdRes.json()  : [];
+      const allVols    = volRes.ok  ? await volRes.json()  : [];
+      const allReqs    = reqRes.ok  ? await reqRes.json()  : [];
+
+      setLeaderDetail({
+        coordinators: allCoords.filter(c => c.project_id === leader.project_id),
+        volunteers:   allVols.filter(v => v.project_id === leader.project_id),
+        requests:     allReqs.filter(r => r.target_project_id === leader.project_id),
+      });
+    } catch {}
+  };
+
   // --- ACTIONS ---
   const handleRegister = async () => {
     if (!selectedEvent || !isLoggedIn()) return;
@@ -447,6 +481,42 @@ export default function App() {
       } else {
         const err = await res.json();
         alert(err.detail || "Ошибка публикации.");
+      }
+    } catch { alert("Ошибка соединения."); }
+  };
+
+  // Direct Event Creation (for authenticated leaders/admins — bypasses request queue)
+  const handleCreateEventDirect = async (e) => {
+    e.preventDefault();
+    if (!eventForm.title || !eventForm.description || !eventForm.address || !eventForm.event_date)
+      return alert("Заполните все обязательные поля.");
+
+    const categoryToProject = { jasyl_el: 3, taza_qazaqstan: 4, shanyraq: 2, zan_men_tartip: 5, general: 1 };
+    const projId = dbUser?.project_id || categoryToProject[eventForm.category] || 1;
+
+    try {
+      const res = await fetch("http://localhost:8000/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        body: JSON.stringify({
+          title: eventForm.title,
+          description: eventForm.description,
+          address: eventForm.address,
+          latitude: 50.0633, longitude: 72.9644,
+          event_date: new Date(eventForm.event_date).toISOString(),
+          points_reward: parseInt(eventForm.points_reward, 10) || 15,
+          category: eventForm.category,
+          project_id: projId,
+        }),
+      });
+      if (res.ok) {
+        alert("✅ Мероприятие успешно создано и опубликовано!");
+        setEventForm({ title: "", description: "", address: "", category: "jasyl_el", event_date: "", points_reward: 15 });
+        loadEvents();
+        loadAdminData();
+      } else {
+        const err = await res.json();
+        alert(`Ошибка: ${err.detail || "Неизвестная ошибка"}`);
       }
     } catch { alert("Ошибка соединения."); }
   };
@@ -545,60 +615,58 @@ export default function App() {
     } catch { alert("Ошибка соединения."); }
   };
 
-  // Proposal submit
+  // Proposal submit — routes to /api/requests (pending queue, visible to project leader + admin)
   const handleProposalSubmit = async (e) => {
     e.preventDefault();
-    if (!proposalData.title || !proposalData.description || !proposalData.address || !proposalData.event_date)
-      return alert("Заполните все обязательные поля.");
+    if (!proposalData.description)
+      return alert("Заполните описание заявки.");
     
     if (!isLoggedIn()) {
       if (!proposalData.guest_name || !proposalData.guest_phone) {
-        return alert("Укажите ваше имя и контактный телефон, чтобы оставить заявку.");
+        return alert("Укажите ваше имя и номер телефона для отправки заявки.");
       }
     }
 
+    // Map category to project_id
+    const categoryToProject = {
+      jasyl_el: 3, taza_qazaqstan: 4, shanyraq: 2, zan_men_tartip: 5, general: 1
+    };
+    const targetProject = categoryToProject[proposalData.category] || 3;
+
     try {
       const payload = {
-        title: proposalData.title,
-        description: proposalData.description,
-        address: proposalData.address,
-        latitude: parseFloat(proposalData.latitude),
-        longitude: parseFloat(proposalData.longitude),
-        event_date: new Date(proposalData.event_date).toISOString(),
-        points_reward: parseInt(proposalData.points_reward, 10),
-        category: proposalData.category,
-        project_id: proposalData.project_id ? parseInt(proposalData.project_id, 10) : null,
-        room_id: proposalData.room_id ? parseInt(proposalData.room_id, 10) : null
+        type: "event_host",
+        subject: proposalData.title || `Заявка на мероприятие — ${proposalData.category}`,
+        description: proposalData.description + (proposalData.address ? `\n📍 ${proposalData.address}` : "") + (proposalData.event_date ? `\n📅 ${new Date(proposalData.event_date).toLocaleString("ru-RU")}` : ""),
+        target_project_id: targetProject,
       };
 
       if (!isLoggedIn()) {
-        payload.guest_name = proposalData.guest_name;
+        payload.guest_name  = proposalData.guest_name;
         payload.guest_phone = proposalData.guest_phone;
-        payload.guest_age = proposalData.guest_age ? parseInt(proposalData.guest_age, 10) : null;
+        payload.guest_age   = proposalData.guest_age ? parseInt(proposalData.guest_age, 10) : null;
       }
 
-      const res = await fetch("http://localhost:8000/api/events", {
+      const res = await fetch("http://localhost:8000/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        alert("Заявка успешно отправлена на портал ZHASTAR!");
+        alert("✅ Ваша заявка отправлена! Руководитель направления рассмотрит её в ближайшее время.");
         setProposalData({
           title: "", description: "", address: "",
           category: "jasyl_el", latitude: 50.0633, longitude: 72.9644,
           event_date: "", points_reward: 15, project_id: "3", room_id: "",
           guest_name: "", guest_phone: "", guest_age: ""
         });
-        
-        if (isLeaderRoute) {
-          loadAdminData();
-        } else {
-          setActiveTab("home"); 
-          loadEvents();
-        }
-      } else { const e = await res.json(); alert(e.detail); }
-    } catch { alert("Ошибка соединения."); }
+        setActiveTab("home");
+        loadEvents();
+      } else {
+        const err = await res.json();
+        alert(`Ошибка: ${err.detail || "Неизвестная ошибка"}`);
+      }
+    } catch { alert("Ошибка соединения. Проверьте интернет."); }
   };
 
   // --- ADMIN ACTIONS ---
@@ -836,14 +904,14 @@ export default function App() {
                   <thead><tr><th style={{ paddingLeft: "1.5rem" }}>ID</th><th>Отправитель</th><th>Направление</th><th>Тип / Тема</th><th>Описание</th><th>Статус</th><th style={{ paddingRight: "1.5rem" }}>Ответ</th></tr></thead>
                   <tbody>
                     {adminRequests.length === 0 ? (
-                      <tr><td colSpan="7" style={{ textAlign: "center", padding: "3rem" }}>Нет обращений.</td></tr>
+                      <tr><td colSpan="7" style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>Нет обращений.</td></tr>
                     ) : adminRequests.map(req => (
-                      <tr key={req.id}>
+                      <tr key={req.id} onClick={() => setSelectedRequest(req)} style={{ cursor: "pointer" }}>
                         <td style={{ paddingLeft: "1.5rem" }}>#{req.id}</td>
                         <td><strong>{req.requester?.first_name}</strong><span style={{ display: "block", fontSize: "0.8rem" }}>{req.requester?.phone}</span></td>
                         <td><span style={{ fontWeight: 700, color: "var(--accent)" }}>{req.target_project?.name || "Бас кеңсе"}</span></td>
                         <td><strong>{req.type}</strong><br/>{req.subject}</td>
-                        <td style={{ maxWidth: "250px", fontSize: "0.9rem" }}>{req.description}</td>
+                        <td style={{ maxWidth: "200px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>{req.description?.slice(0, 70)}…</td>
                         <td>{getStatusBadge(req.status)}</td>
                         <td style={{ paddingRight: "1.5rem", minWidth: "200px" }}>
                           {req.status === "pending" ? (
@@ -929,55 +997,121 @@ export default function App() {
             </div>
           )}
           {activeAdminTab === "create_admin" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: selectedLeader ? "1fr 1.5fr 1.5fr" : "1fr 2fr", gap: "2rem" }}>
+              {/* Create Leader Form */}
               <div className="card-item" style={{ padding: "1.5rem" }}>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1rem" }}>Создать руководителя</h3>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1rem" }}>👑 Создать руководителя</h3>
                 <form onSubmit={handleCreateAdminSubmit}>
-                  <div className="input-group-modern"><label className="label-modern">Никнейм руководителя *</label><input type="text" className="input-modern" placeholder="shanyraq_leader" value={adminForm.username} onChange={e => setAdminForm({ ...adminForm, username: e.target.value })} required /></div>
-                  <div className="input-group-modern"><label className="label-modern">Имя руководителя *</label><input type="text" className="input-modern" placeholder="Марат" value={adminForm.first_name} onChange={e => setAdminForm({ ...adminForm, first_name: e.target.value })} required /></div>
+                  <div className="input-group-modern"><label className="label-modern">Никнейм *</label><input type="text" className="input-modern" placeholder="shanyraq_leader" value={adminForm.username} onChange={e => setAdminForm({ ...adminForm, username: e.target.value })} required /></div>
+                  <div className="input-group-modern"><label className="label-modern">Имя *</label><input type="text" className="input-modern" placeholder="Марат" value={adminForm.first_name} onChange={e => setAdminForm({ ...adminForm, first_name: e.target.value })} required /></div>
                   <div className="input-group-modern">
                     <label className="label-modern">Направление проекта</label>
                     <select className="input-modern" value={adminForm.project_id} onChange={e => setAdminForm({ ...adminForm, project_id: e.target.value })} required>
                       {PROJECTS.filter(p => p.id !== 1).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
-                  <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "1rem" }}>Создать руководителя</button>
+                  <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "1rem" }}>Создать</button>
                 </form>
               </div>
 
+              {/* Leaders List (clickable) */}
               <div className="card-item" style={{ padding: "0" }}>
-                <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border)", background: "#F8FAFC" }}>
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0 }}>Реестр Руководителей Проектов</h3>
+                <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border)", background: "#F8FAFC", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0 }}>Реестр Руководителей</h3>
+                  {selectedLeader && <button onClick={() => setSelectedLeader(null)} style={{ border: "none", background: "rgba(0,0,0,0.06)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer", fontSize: "0.8rem" }}>✕ Закрыть панель</button>}
                 </div>
                 <div className="table-responsive" style={{ border: "none", marginTop: 0 }}>
                   <table className="table-modern">
                     <thead>
                       <tr>
-                        <th style={{ paddingLeft: "1.5rem" }}>Имя</th>
-                        <th>Никнейм</th>
-                        <th>Направление проекта</th>
-                        <th style={{ paddingRight: "1.5rem" }}>ID</th>
+                        <th style={{ paddingLeft: "1.5rem" }}>Руководитель</th>
+                        <th>Направление</th>
+                        <th style={{ paddingRight: "1.5rem" }}>Детали</th>
                       </tr>
                     </thead>
                     <tbody>
                       {adminLeaders.length === 0 ? (
-                        <tr><td colSpan="4" style={{ textAlign: "center", padding: "3rem" }}>Руководители еще не созданы.</td></tr>
-                      ) : adminLeaders.map(leader => (
-                        <tr key={leader.id}>
-                          <td style={{ paddingLeft: "1.5rem" }}><strong>{leader.first_name}</strong></td>
-                          <td><span style={{ color: "var(--accent)", fontWeight: 600 }}>@{leader.username}</span></td>
-                          <td>
-                            <span className="card-category-badge" style={{ background: PROJECTS.find(p => p.id === leader.project_id)?.color || "var(--accent)", color: "white", margin: 0 }}>
-                              {PROJECTS.find(p => p.id === leader.project_id)?.name || "HQ / Center"}
-                            </span>
-                          </td>
-                          <td style={{ paddingRight: "1.5rem", fontFamily: "monospace", color: "var(--text-secondary)" }}>#{leader.id}</td>
-                        </tr>
-                      ))}
+                        <tr><td colSpan="3" style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>Руководители не созданы.</td></tr>
+                      ) : adminLeaders.map(leader => {
+                        const proj = PROJECTS.find(p => p.id === leader.project_id);
+                        const isActive = selectedLeader?.id === leader.id;
+                        return (
+                          <tr key={leader.id}
+                            onClick={() => loadLeaderDetail(leader)}
+                            style={{ cursor: "pointer", background: isActive ? "rgba(124,58,237,0.06)" : undefined, transition: "background 0.15s" }}
+                          >
+                            <td style={{ paddingLeft: "1.5rem" }}>
+                              <strong>{leader.first_name}</strong>
+                              <span style={{ display: "block", fontSize: "0.8rem", color: "var(--accent)" }}>@{leader.username}</span>
+                            </td>
+                            <td>
+                              <span className="card-category-badge" style={{ background: proj?.color || "var(--accent)", color: "white", margin: 0 }}>
+                                {proj?.name || "HQ"}
+                              </span>
+                            </td>
+                            <td style={{ paddingRight: "1.5rem" }}>
+                              <button className="btn-modern btn-modern-secondary" style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem" }} onClick={e => { e.stopPropagation(); loadLeaderDetail(leader); }}>
+                                👁 Команда
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
+
+              {/* Leader Detail Panel */}
+              {selectedLeader && (
+                <div className="card-item" style={{ padding: "0", overflow: "hidden" }}>
+                  <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--border)", background: PROJECTS.find(p => p.id === selectedLeader.project_id)?.color || "var(--accent)", color: "#fff" }}>
+                    <div style={{ fontWeight: 900, fontSize: "1.1rem" }}>👑 {selectedLeader.first_name}</div>
+                    <div style={{ fontSize: "0.8rem", opacity: 0.85 }}>@{selectedLeader.username} · {PROJECTS.find(p => p.id === selectedLeader.project_id)?.name}</div>
+                  </div>
+                  <div style={{ padding: "1rem 1.25rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid var(--border)" }}>
+                    <div style={{ flex: 1, textAlign: "center", padding: "0.75rem", background: "#f8fafc", borderRadius: "8px" }}>
+                      <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--accent)" }}>{leaderDetail.coordinators.length}</div>
+                      <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Координаторов</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "0.75rem", background: "#f8fafc", borderRadius: "8px" }}>
+                      <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#059669" }}>{leaderDetail.volunteers.length}</div>
+                      <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Волонтёров</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", padding: "0.75rem", background: "#f8fafc", borderRadius: "8px" }}>
+                      <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#dc2626" }}>{leaderDetail.requests.filter(r => r.status === "pending").length}</div>
+                      <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Ожидают</div>
+                    </div>
+                  </div>
+                  <div style={{ overflowY: "auto", maxHeight: "380px" }}>
+                    {leaderDetail.coordinators.length > 0 && (
+                      <div style={{ padding: "0.75rem 1.25rem" }}>
+                        <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Координаторы</div>
+                        {leaderDetail.coordinators.map(c => (
+                          <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", borderBottom: "1px solid var(--border)" }}>
+                            <strong style={{ fontSize: "0.9rem" }}>{c.first_name}</strong>
+                            <span style={{ fontSize: "0.8rem", color: "var(--accent)" }}>@{c.username}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {leaderDetail.requests.length > 0 && (
+                      <div style={{ padding: "0.75rem 1.25rem" }}>
+                        <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Обращения ({leaderDetail.requests.length})</div>
+                        {leaderDetail.requests.slice(0, 5).map(r => (
+                          <div key={r.id} style={{ padding: "0.5rem 0", borderBottom: "1px solid var(--border)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <strong style={{ fontSize: "0.85rem" }}>{r.subject}</strong>
+                              {getStatusBadge(r.status)}
+                            </div>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{r.requester?.first_name} · {r.requester?.phone}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {activeAdminTab === "events" && (
@@ -1049,13 +1183,15 @@ export default function App() {
             </div>
           )}
         </main>
+        {/* Real-time Staff Chat */}
+        <ChatPanel userId={dbUser.id} userRole={dbUser.role} projectId={dbUser.project_id} />
       </div>
     );
   }
 
-  // ──────────────────────────────────────────────────────────
-  // ─── RENDERING: PROJECT LEADER WORKSPACE ROUTE (/leader) ───
-  // ──────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────
+  // ─── RENDERING: PROJECT LEADER WORKSPACE ROUTE (/leader) ──
+  // ─────────────────────────────────────────────────────────
   if (isLeaderRoute) {
     if (!dbUser || dbUser.role !== "project_admin") {
       return (
@@ -1271,29 +1407,57 @@ export default function App() {
           {activeAdminTab === "events" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem" }}>
               <div className="card-item" style={{ padding: "1.5rem" }}>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "1rem" }}>Создать акцию</h3>
-                <form onSubmit={handleProposalSubmit}>
-                  <div className="input-group-modern"><label className="label-modern">Название акции</label><input type="text" className="input-modern" value={proposalData.title} onChange={e => setProposalData({ ...proposalData, title: e.target.value })} required /></div>
-                  <div className="input-group-modern"><label className="label-modern">Описание акции</label><textarea className="input-modern" rows="3" value={proposalData.description} onChange={e => setProposalData({ ...proposalData, description: e.target.value })} required /></div>
-                  <div className="input-group-modern"><label className="label-modern">Место сбора</label><input type="text" className="input-modern" value={proposalData.address} onChange={e => setProposalData({ ...proposalData, address: e.target.value })} required /></div>
-                  <div className="input-group-modern"><label className="label-modern">Дата и время начала</label><input type="datetime-local" className="input-modern" value={proposalData.event_date} onChange={e => setProposalData({ ...proposalData, event_date: e.target.value })} required /></div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "1rem" }}>➕ Создать мероприятие</h3>
+                <form onSubmit={handleCreateEventDirect}>
+                  <div className="input-group-modern">
+                    <label className="label-modern">Название акции *</label>
+                    <input type="text" className="input-modern" placeholder="Субботник в парке..." value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} required />
+                  </div>
+                  <div className="input-group-modern">
+                    <label className="label-modern">Описание *</label>
+                    <textarea className="input-modern" rows="3" placeholder="Цели и задачи мероприятия..." value={eventForm.description} onChange={e => setEventForm({ ...eventForm, description: e.target.value })} required />
+                  </div>
+                  <div className="input-group-modern">
+                    <label className="label-modern">Место сбора *</label>
+                    <input type="text" className="input-modern" placeholder="ул. Металлургов, 5" value={eventForm.address} onChange={e => setEventForm({ ...eventForm, address: e.target.value })} required />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "0.5rem" }}>
+                    <div className="input-group-modern">
+                      <label className="label-modern">Дата и время *</label>
+                      <input type="datetime-local" className="input-modern" value={eventForm.event_date} onChange={e => setEventForm({ ...eventForm, event_date: e.target.value })} required />
+                    </div>
+                    <div className="input-group-modern">
+                      <label className="label-modern">Баллы</label>
+                      <input type="number" className="input-modern" min="1" max="200" value={eventForm.points_reward} onChange={e => setEventForm({ ...eventForm, points_reward: e.target.value })} />
+                    </div>
+                  </div>
                   <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "1rem" }}>Опубликовать</button>
                 </form>
               </div>
               <div className="card-item" style={{ padding: "0" }}>
                 <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border)", background: "#F8FAFC" }}>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0 }}>Предстоящие акции направления {currentProject.name}</h3>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0 }}>Мероприятия — {currentProject.name}</h3>
                 </div>
                 <div className="table-responsive" style={{ border: "none", marginTop: 0 }}>
                   <table className="table-modern">
-                    <thead><tr><th style={{ paddingLeft: "1.5rem" }}>Что</th><th>Когда / Где</th><th style={{ paddingRight: "1.5rem" }}>Баллы</th></tr></thead>
+                    <thead><tr>
+                      <th style={{ paddingLeft: "1.5rem" }}>Название</th>
+                      <th>Дата / Место</th>
+                      <th style={{ paddingRight: "1.5rem" }}>Баллы</th>
+                    </tr></thead>
                     <tbody>
                       {adminEvents.filter(ev => ev.project_id === dbUser.project_id).length === 0 ? (
-                        <tr><td colSpan="3" style={{ textAlign: "center", padding: "3rem" }}>Нет запланированных акций.</td></tr>
+                        <tr><td colSpan="3" style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>Нет запланированных акций.</td></tr>
                       ) : adminEvents.filter(ev => ev.project_id === dbUser.project_id).map(ev => (
                         <tr key={ev.id}>
-                          <td style={{ paddingLeft: "1.5rem" }}><strong>{ev.title}</strong><br/><span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{ev.description}</span></td>
-                          <td><strong>{new Date(ev.event_date).toLocaleDateString()}</strong><br/>{ev.address}</td>
+                          <td style={{ paddingLeft: "1.5rem" }}>
+                            <strong>{ev.title}</strong>
+                            <br/><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{ev.description?.slice(0, 60)}…</span>
+                          </td>
+                          <td>
+                            <strong>{new Date(ev.event_date).toLocaleDateString("ru-RU", { day: "2-digit", month: "short" })}</strong>
+                            <span style={{ display: "block", fontSize: "0.8rem", color: "var(--text-secondary)" }}>{ev.address}</span>
+                          </td>
                           <td style={{ paddingRight: "1.5rem", fontWeight: 800, color: "var(--accent)" }}>+{ev.points_reward} PTS</td>
                         </tr>
                       ))}
@@ -1304,6 +1468,8 @@ export default function App() {
             </div>
           )}
         </main>
+        {/* Real-time Staff Chat */}
+        <ChatPanel userId={dbUser.id} userRole={dbUser.role} projectId={dbUser.project_id} />
       </div>
     );
   }
@@ -1367,6 +1533,7 @@ export default function App() {
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
             <button className={`new-nav-link ${activeAdminTab === "volunteers" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "volunteers" ? "#047857" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("volunteers")}>👥 База волонтёров ({adminVolunteers.length})</button>
             <button className={`new-nav-link ${activeAdminTab === "events" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "events" ? "#047857" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("events")}>🗓️ Отметки участия ({myProjectEvents.length})</button>
+            <button className={`new-nav-link ${activeAdminTab === "requests" ? "active" : ""}`} style={{ width: "100%", textAlign: "left", padding: "0.75rem 1rem", background: activeAdminTab === "requests" ? "#047857" : "transparent", border: "none", borderRadius: "8px", color: "white", cursor: "pointer", fontWeight: 700 }} onClick={() => setActiveAdminTab("requests")}>✉️ Заявки ({adminRequests.length})</button>
           </nav>
           <div style={{ borderTop: "1px solid #047857", paddingTop: "1rem" }}>
             <div style={{ fontSize: "0.8rem", color: "#a7f3d0", marginBottom: "0.5rem" }}>Работник: {dbUser.first_name}</div>
@@ -1375,10 +1542,11 @@ export default function App() {
           </div>
         </aside>
         <main style={{ flex: 1, padding: "2.5rem 3rem", overflowY: "auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem", marginBottom: "2.5rem" }}>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminVolunteers.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ваши волонтеры</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{myProjectEvents.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Акций направления</div></div>
-            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{currentProject.name}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>направление координации</div></div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem", marginBottom: "2.5rem" }}>
+            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminVolunteers.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Волонтёров</div></div>
+            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{myProjectEvents.length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Мероприятий</div></div>
+            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.75rem", fontWeight: 900 }}>{adminRequests.filter(r => r.status === "pending").length}</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Ожидают</div></div>
+            <div className="card-item" style={{ padding: "1.25rem" }}><div style={{ fontSize: "1.45rem", fontWeight: 900, color: "var(--accent)" }}>{adminVolunteers.reduce((s, v) => s + (v.hours_logged || 0), 0)} ч.</div><div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Итого часов</div></div>
           </div>
           {activeAdminTab === "volunteers" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem" }}>
@@ -1476,6 +1644,8 @@ export default function App() {
             </div>
           )}
         </main>
+        {/* Real-time Staff Chat */}
+        <ChatPanel userId={dbUser.id} userRole={dbUser.role} projectId={dbUser.project_id} />
       </div>
     );
   }
@@ -2273,9 +2443,20 @@ export default function App() {
         <div style={{ padding: "0 2rem 4rem" }}>
           <div className="card-item" style={{ padding: "2.5rem", maxWidth: "700px", margin: "2rem auto", borderTop: "4px solid var(--accent)" }}>
             <h2 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>{t.propTitle}</h2>
-            <p style={{ fontSize: "1rem", color: "var(--text-secondary)", marginBottom: "2.5rem" }}>{t.propDesc}</p>
+            <p style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>{t.propDesc}</p>
             
+            {/* Info banner */}
+            <div style={{
+              padding: "0.85rem 1rem", marginBottom: "2rem", borderRadius: "0.75rem",
+              background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)",
+              fontSize: "0.85rem", color: "var(--text-secondary)", display: "flex", gap: "0.6rem", alignItems: "flex-start"
+            }}>
+              <span style={{ fontSize: "1.1rem" }}>ℹ️</span>
+              <span>Ваша заявка поступит руководителю выбранного направления. После рассмотрения с вами свяжутся по указанному телефону.</span>
+            </div>
+
             <form onSubmit={handleProposalSubmit}>
+              {/* Direction */}
               <div className="input-group-modern">
                 <label className="label-modern">{t.propCat}</label>
                 <select className="input-modern" value={proposalData.category} onChange={e => {
@@ -2293,53 +2474,91 @@ export default function App() {
                 </select>
               </div>
 
+              {/* Title (optional) */}
               <div className="input-group-modern">
                 <label className="label-modern">{t.propName}</label>
-                <input type="text" className="input-modern" value={proposalData.title} onChange={e => setProposalData({ ...proposalData, title: e.target.value })} required />
+                <input type="text" className="input-modern"
+                  placeholder="Например: Субботник в парке Самарканд"
+                  value={proposalData.title}
+                  onChange={e => setProposalData({ ...proposalData, title: e.target.value })}
+                />
               </div>
 
+              {/* Description (required) */}
               <div className="input-group-modern">
-                <label className="label-modern">{t.propDetails}</label>
-                <textarea className="input-modern" rows="4" value={proposalData.description} onChange={e => setProposalData({ ...proposalData, description: e.target.value })} style={{ resize: "vertical" }} required />
+                <label className="label-modern">{t.propDetails} *</label>
+                <textarea className="input-modern" rows="4"
+                  placeholder="Опишите что именно вы хотите организовать, сколько участников, какие ресурсы нужны..."
+                  value={proposalData.description}
+                  onChange={e => setProposalData({ ...proposalData, description: e.target.value })}
+                  style={{ resize: "vertical" }} required
+                />
               </div>
 
-              <div className="input-group-modern">
-                <label className="label-modern">{t.propAddress}</label>
-                <input type="text" className="input-modern" value={proposalData.address} onChange={e => setProposalData({ ...proposalData, address: e.target.value })} required />
-              </div>
-
-              <div className="input-group-modern">
-                <label className="label-modern">{t.propMap}</label>
-                <div className="map-card-container">
-                  <MapWidget latitude={proposalData.latitude} longitude={proposalData.longitude} onCoordinateSelect={(lat, lng) => setProposalData({ ...proposalData, latitude: lat, longitude: lng })} />
+              {/* Address + Date in 2 columns */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                <div className="input-group-modern">
+                  <label className="label-modern">{t.propAddress}</label>
+                  <input type="text" className="input-modern"
+                    placeholder="Адрес или район"
+                    value={proposalData.address}
+                    onChange={e => setProposalData({ ...proposalData, address: e.target.value })}
+                  />
+                </div>
+                <div className="input-group-modern">
+                  <label className="label-modern">{t.propDate}</label>
+                  <input type="datetime-local" className="input-modern"
+                    value={proposalData.event_date}
+                    onChange={e => setProposalData({ ...proposalData, event_date: e.target.value })}
+                  />
                 </div>
               </div>
 
-              <div className="input-group-modern">
-                <label className="label-modern">{t.propDate}</label>
-                <input type="datetime-local" className="input-modern" value={proposalData.event_date} onChange={e => setProposalData({ ...proposalData, event_date: e.target.value })} required />
-              </div>
-
+              {/* Guest contact info (shown only if not logged in) */}
               {!isLoggedIn() && (
-                <>
+                <div style={{
+                  marginTop: "1.5rem", padding: "1.25rem", borderRadius: "0.75rem",
+                  border: "1px solid rgba(124,58,237,0.25)", background: "rgba(124,58,237,0.04)"
+                }}>
+                  <p style={{ fontWeight: 700, marginBottom: "1rem", fontSize: "0.9rem" }}>
+                    👤 Ваши контактные данные
+                  </p>
                   <div className="input-group-modern">
-                    <label className="label-modern">{t.srvRequesterName}</label>
-                    <input type="text" className="input-modern" placeholder="Имя" value={proposalData.guest_name} onChange={e => setProposalData({ ...proposalData, guest_name: e.target.value })} required />
+                    <label className="label-modern">{t.srvRequesterName} *</label>
+                    <input type="text" className="input-modern"
+                      placeholder="Ваше имя"
+                      value={proposalData.guest_name}
+                      onChange={e => setProposalData({ ...proposalData, guest_name: e.target.value })}
+                      required
+                    />
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "0.5rem" }}>
                     <div className="input-group-modern">
-                      <label className="label-modern">{t.srvRequesterPhone}</label>
-                      <input type="tel" className="input-modern" placeholder="+7..." value={proposalData.guest_phone} onChange={e => setProposalData({ ...proposalData, guest_phone: e.target.value })} required />
+                      <label className="label-modern">{t.srvRequesterPhone} *</label>
+                      <input type="tel" className="input-modern"
+                        placeholder="+7 (7XX) XXX-XX-XX"
+                        value={proposalData.guest_phone}
+                        onChange={e => setProposalData({ ...proposalData, guest_phone: e.target.value })}
+                        required
+                      />
                     </div>
                     <div className="input-group-modern">
                       <label className="label-modern">{t.srvRequesterAge}</label>
-                      <input type="number" className="input-modern" placeholder="18" value={proposalData.guest_age} onChange={e => setProposalData({ ...proposalData, guest_age: e.target.value })} />
+                      <input type="number" className="input-modern"
+                        placeholder="Возраст"
+                        min="10" max="100"
+                        value={proposalData.guest_age}
+                        onChange={e => setProposalData({ ...proposalData, guest_age: e.target.value })}
+                      />
                     </div>
                   </div>
-                </>
+                </div>
               )}
 
-              <button type="submit" className="btn-modern btn-modern-primary" style={{ width: "100%", marginTop: "1.5rem", padding: "1rem", fontSize: "1.05rem" }}>
+              <button type="submit" className="btn-modern btn-modern-primary" style={{
+                width: "100%", marginTop: "1.75rem", padding: "1rem", fontSize: "1.05rem",
+                fontWeight: 700, letterSpacing: "0.02em"
+              }}>
                 {t.propSubmit}
               </button>
             </form>
@@ -2389,6 +2608,51 @@ export default function App() {
           👤 {t.tabCabinet}
         </button>
       </nav>
+
+      {/* --- MODAL: Request Detail --- */}
+      {selectedRequest && (
+        <div className="modal-backdrop" onClick={() => setSelectedRequest(null)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: "580px" }}>
+            <button onClick={() => setSelectedRequest(null)} style={{ position: "absolute", top: "1rem", right: "1rem", background: "#F1F5F9", border: "none", width: "32px", height: "32px", borderRadius: "50%", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+              <div style={{ width: "44px", height: "44px", background: "var(--accent)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem", color: "#fff", flexShrink: 0 }}>✉️</div>
+              <div>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0 }}>{selectedRequest.subject}</h2>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>#{selectedRequest.id} · {selectedRequest.type} · {getStatusBadge(selectedRequest.status)}</span>
+              </div>
+            </div>
+
+            <div style={{ background: "#f8fafc", borderRadius: "0.75rem", padding: "1rem", marginBottom: "1.25rem", border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>Описание</div>
+              <p style={{ margin: 0, lineHeight: 1.7, color: "var(--text)", whiteSpace: "pre-wrap" }}>{selectedRequest.description}</p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.25rem" }}>
+              <div style={{ background: "#f8fafc", borderRadius: "0.75rem", padding: "0.75rem", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "0.25rem" }}>Заявитель</div>
+                <div style={{ fontWeight: 700 }}>{selectedRequest.requester?.first_name || selectedRequest.guest_name || "—"}</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{selectedRequest.requester?.phone || selectedRequest.guest_phone || "—"}</div>
+              </div>
+              <div style={{ background: "#f8fafc", borderRadius: "0.75rem", padding: "0.75rem", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "0.25rem" }}>Направление</div>
+                <div style={{ fontWeight: 700 }}>{selectedRequest.target_project?.name || "Бас кеңсе / HQ"}</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                  {selectedRequest.created_at ? new Date(selectedRequest.created_at).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "—"}
+                </div>
+              </div>
+            </div>
+
+            {selectedRequest.response && (
+              <div style={{ background: "rgba(124,58,237,0.06)", borderRadius: "0.75rem", padding: "0.85rem 1rem", border: "1px solid rgba(124,58,237,0.15)", marginBottom: "1rem" }}>
+                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", marginBottom: "0.25rem" }}>Ответ руководителя</div>
+                <p style={{ margin: 0, color: "var(--text)" }}>{selectedRequest.response}</p>
+              </div>
+            )}
+
+            <button onClick={() => setSelectedRequest(null)} className="btn-modern btn-modern-secondary" style={{ width: "100%", marginTop: "0.5rem" }}>Закрыть</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
