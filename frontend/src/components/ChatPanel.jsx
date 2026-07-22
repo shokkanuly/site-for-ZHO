@@ -25,7 +25,6 @@ export default function ChatPanel({ userId, userRole, projectId, userName }) {
   activeRoomRef.current = activeRoom;
 
   const API     = API_BASE;
-  const WS_BASE = WS_BASE;
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

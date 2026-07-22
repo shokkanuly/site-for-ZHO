@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, BigInteger
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, BigInteger, Float
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -13,6 +13,9 @@ class Request(Base):
     type = Column(String, default="help", nullable=False) # help / official_letter / event_host / other
     subject = Column(String, nullable=False)
     description = Column(String, nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    address = Column(String, nullable=True)
     status = Column(String, default="pending", nullable=False) # pending / approved / rejected / resolved
     response = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)

@@ -1,5 +1,6 @@
 import React from "react";
 import { createPortal } from "react-dom";
+import MapWidget from "./MapWidget";
 
 /**
  * RequestDetailModal — renders via React Portal so it works
@@ -25,7 +26,7 @@ export default function RequestDetailModal({ request, onClose }) {
 
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()}>
+      <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: "600px" }}>
         {/* Close button */}
         <button className="modal-close" onClick={onClose}>✕</button>
 
@@ -64,6 +65,30 @@ export default function RequestDetailModal({ request, onClose }) {
           <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.5rem" }}>Описание обращения</div>
           <p style={{ margin: 0, lineHeight: 1.6, color: "var(--text)", whiteSpace: "pre-wrap" }}>{request.description}</p>
         </div>
+
+        {/* Selected Location Map Preview (if location was chosen) */}
+        {(request.latitude || request.address) && (
+          <div style={{
+            background: "var(--bg-muted)",
+            borderRadius: "var(--radius)",
+            padding: "0.875rem",
+            marginBottom: "1.25rem",
+            border: "1px solid var(--border)",
+          }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.5rem" }}>
+              📍 Предложенная локация мероприятия {request.address ? `— ${request.address}` : ""}
+            </div>
+            {request.latitude && request.longitude && (
+              <div style={{ height: "200px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(0,0,0,0.1)" }}>
+                <MapWidget
+                  latitude={request.latitude}
+                  longitude={request.longitude}
+                  readOnly={true}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Info grid */}
         <div className="grid-2" style={{ marginBottom: "1.25rem" }}>

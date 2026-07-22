@@ -9,6 +9,9 @@ class RequestBase(BaseModel):
     type: str # help / official_letter / event_host / other
     subject: str
     description: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    address: Optional[str] = None
 
 class RequestCreate(RequestBase):
     # For guest / community_user auto-registration

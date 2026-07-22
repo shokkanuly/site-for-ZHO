@@ -90,6 +90,9 @@ async def create_request(
         type=payload.type,
         subject=payload.subject,
         description=payload.description,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        address=payload.address,
         status="pending"
     )
     db.add(new_request)

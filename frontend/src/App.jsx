@@ -121,6 +121,7 @@ export default function App() {
   // Letter/Request Form State
   const [requestData, setRequestData] = useState({
     target_project_id: "", type: "help", subject: "", description: "",
+    latitude: 50.056523, longitude: 72.983299, address: "",
     guest_name: "", guest_phone: "", guest_age: ""
   });
 
@@ -591,6 +592,9 @@ export default function App() {
           type: requestData.type,
           subject: requestData.subject,
           description: requestData.description,
+          latitude: requestData.latitude || null,
+          longitude: requestData.longitude || null,
+          address: requestData.address || null,
           guest_name: requestData.guest_name || null,
           guest_phone: requestData.guest_phone || null,
           guest_age: requestData.guest_age ? parseInt(requestData.guest_age, 10) : null
@@ -608,6 +612,7 @@ export default function App() {
 
         setRequestData({
           target_project_id: "", type: "help", subject: "", description: "",
+          latitude: 50.056523, longitude: 72.983299, address: "",
           guest_name: "", guest_phone: "", guest_age: ""
         });
         setActiveTab("volunteer");
@@ -2132,6 +2137,30 @@ export default function App() {
                 <div className="input-group-modern">
                   <label className="label-modern">{t.srvDescription}</label>
                   <textarea className="input-modern" rows="4" placeholder="Опишите детали обращения..." value={requestData.description} onChange={e => setRequestData({ ...requestData, description: e.target.value })} style={{ resize: "vertical" }} required />
+                </div>
+
+                {/* Interactive Location Picker Map */}
+                <div className="input-group-modern mt-md" style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)" }}>
+                  <label className="label-modern" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                    <span>📍 {lang === "ru" ? "Место проведения / Точка сбора (выберите на карте)" : "Өткізілетін орын (картада таңдаңыз)"}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#64748B", fontWeight: 500 }}>
+                      {requestData.latitude ? `${requestData.latitude.toFixed(5)}, ${requestData.longitude.toFixed(5)}` : "Кликайте по карте"}
+                    </span>
+                  </label>
+                  <div style={{ height: "260px", borderRadius: "10px", overflow: "hidden", marginBottom: "0.75rem", border: "1px solid rgba(0,0,0,0.1)" }}>
+                    <MapWidget
+                      latitude={requestData.latitude}
+                      longitude={requestData.longitude}
+                      onCoordinateSelect={(lat, lng) => setRequestData(prev => ({ ...prev, latitude: lat, longitude: lng }))}
+                    />
+                  </div>
+                  <input 
+                    type="text" 
+                    className="input-modern" 
+                    placeholder={lang === "ru" ? "Адрес или ориентир (например: Парк Самарканд, около центрального входа)" : "Мекенжай немесе бағдар"} 
+                    value={requestData.address || ""} 
+                    onChange={e => setRequestData(prev => ({ ...prev, address: e.target.value }))} 
+                  />
                 </div>
 
                 {!dbUser && (
